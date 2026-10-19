@@ -1561,3 +1561,119 @@ html[data-theme="dark"] .comparison-page-note { border-color: var(--line); backg
   .get-app-button, .get-app-button::after, .get-app-button > svg:last-child,
   .comparison-journey-card, .coming-soon-badge i { transition: none !important; animation: none !important; }
 }
+
+html[data-theme="dark"] {
+  --accent-secondary: #66d9e8;
+  --accent-secondary-soft: rgba(102, 217, 232, .14);
+}
+html[data-theme="dark"] .ledger-hero::after {
+  position: absolute;
+  z-index: 0;
+  inset: -12% -8% 2%;
+  background:
+    radial-gradient(ellipse at 76% 32%, rgba(102,217,232,.13), transparent 30%),
+    radial-gradient(ellipse at 52% 55%, rgba(124,152,255,.12), transparent 38%);
+  content: '';
+  pointer-events: none;
+  transform-origin: 68% 42%;
+  animation: dark-hero-atmosphere 18s ease-in-out infinite alternate;
+}
+html[data-theme="dark"] .hero-layout,
+html[data-theme="dark"] .hero-footnote { position: relative; z-index: 1; }
+html[data-theme="dark"] .hero-copy-ledger > .hero-lede,
+html[data-theme="dark"] .hero-copy-ledger > .hero-actions-ledger,
+html[data-theme="dark"] .hero-copy-ledger > .hero-fine,
+html[data-theme="dark"] .hero-copy-ledger > .hero-facts {
+  animation: dark-hero-rise .7s both cubic-bezier(.2,.7,.2,1);
+}
+html[data-theme="dark"] .hero-copy-ledger > .hero-lede { animation-delay: .08s; }
+html[data-theme="dark"] .hero-copy-ledger > .hero-actions-ledger { animation-delay: .16s; }
+html[data-theme="dark"] .hero-copy-ledger > .hero-fine { animation-delay: .22s; }
+html[data-theme="dark"] .hero-copy-ledger > .hero-facts { animation-delay: .28s; }
+html[data-theme="dark"] .hero-copy-ledger h1 .hero-highlight {
+  color: #a9baff;
+  text-shadow: 0 0 30px rgba(102,217,232,.16);
+  background-image: linear-gradient(90deg, var(--accent-soft), color-mix(in srgb, var(--accent-secondary) 17%, var(--accent-soft)));
+}
+html[data-theme="dark"] .hero-scene-column { position: relative; }
+html[data-theme="dark"] .hero-scene-column::before {
+  position: absolute;
+  z-index: -1;
+  inset: 9% 6%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(102,217,232,.16), rgba(124,152,255,.08) 38%, transparent 70%);
+  content: '';
+  filter: blur(22px);
+  animation: dark-scene-aura 7s ease-in-out infinite alternate;
+}
+html[data-theme="dark"] .ledger-scene {
+  border-color: color-mix(in srgb, var(--accent-secondary) 25%, var(--line));
+  box-shadow: 0 26px 70px -32px rgba(0,0,0,.72), 0 0 36px -24px rgba(102,217,232,.5);
+}
+html[data-theme="dark"] .ledger-scene::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border: 1px solid rgba(102,217,232,.12);
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+  animation: dark-scene-edge 6s ease-in-out infinite;
+}
+html[data-theme="dark"] .extracted-pane .pane-heading span:first-child,
+html[data-theme="dark"] .agent-icon,
+html[data-theme="dark"] .note-spark { color: var(--accent-secondary); }
+html[data-theme="dark"] .agent-icon,
+html[data-theme="dark"] .note-spark { background: var(--accent-secondary-soft); }
+html[data-theme="dark"] .invoice-scan {
+  border-color: var(--accent-secondary);
+  background: linear-gradient(to bottom, transparent, rgba(102,217,232,.2));
+}
+html[data-theme="dark"] .scene-progress i.progress-on { background: var(--accent-secondary); }
+html[data-theme="dark"] .feature-card:hover,
+html[data-theme="dark"] .tested-feature:hover {
+  border-color: color-mix(in srgb, var(--accent-secondary) 48%, var(--line));
+  box-shadow: 0 15px 34px -22px rgba(102,217,232,.42);
+}
+html[data-theme="dark"] .feature-icon,
+html[data-theme="dark"] .tested-feature-icon {
+  transition: color .25s ease, background-color .25s ease, transform .25s ease;
+}
+html[data-theme="dark"] .feature-card:hover .feature-icon,
+html[data-theme="dark"] .tested-feature:hover .tested-feature-icon {
+  color: var(--accent-secondary);
+  background: var(--accent-secondary-soft);
+  transform: translateY(-2px);
+}
+html[data-theme="dark"] .hero-facts li::before { border-color: var(--accent-secondary); }
+@keyframes dark-hero-atmosphere {
+  from { opacity: .58; transform: translate3d(-.5%, 0, 0) scale(.98); }
+  to { opacity: 1; transform: translate3d(.5%, -1%, 0) scale(1.025); }
+}
+@keyframes dark-hero-rise {
+  from { opacity: 0; transform: translateY(11px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes dark-scene-aura {
+  from { opacity: .55; transform: scale(.96); }
+  to { opacity: 1; transform: scale(1.045); }
+}
+@keyframes dark-scene-edge {
+  0%, 100% { border-color: rgba(102,217,232,.08); }
+  50% { border-color: rgba(102,217,232,.24); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] .ledger-hero::after,
+  html[data-theme="dark"] .hero-copy-ledger > .hero-lede,
+  html[data-theme="dark"] .hero-copy-ledger > .hero-actions-ledger,
+  html[data-theme="dark"] .hero-copy-ledger > .hero-fine,
+  html[data-theme="dark"] .hero-copy-ledger > .hero-facts,
+  html[data-theme="dark"] .hero-scene-column::before,
+  html[data-theme="dark"] .ledger-scene::after { animation: none !important; }
+  html[data-theme="dark"] .hero-copy-ledger > .hero-lede,
+  html[data-theme="dark"] .hero-copy-ledger > .hero-actions-ledger,
+  html[data-theme="dark"] .hero-copy-ledger > .hero-fine,
+  html[data-theme="dark"] .hero-copy-ledger > .hero-facts { opacity: 1; transform: none; }
+  html[data-theme="dark"] .feature-icon,
+  html[data-theme="dark"] .tested-feature-icon { transition: none; }
+}
