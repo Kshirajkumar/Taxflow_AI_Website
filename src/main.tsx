@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import './styles.css';
@@ -95,6 +95,117 @@ function useReveal() {
     elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
   }, []);
+}
+
+function CursorDotField() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
+
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const spacing = 32;
+    const reach = 138;
+    const trail: { x: number; y: number; time: number }[] = [];
+    let width = 0;
+    let height = 0;
+    let frame = 0;
+    let targetX = -1000;
+    let targetY = -1000;
+    let cursorX = targetX;
+    let cursorY = targetY;
+    let lastMoveAt = 0;
+    let reducedMotion = motionPreference.matches;
+
+    const draw = (time: number) => {
+      frame = 0;
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+      const opacity = reducedMotion ? 0 : Math.max(0, 1 - (time - lastMoveAt) / 850);
+      cursorX += (targetX - cursorX) * 0.22;
+      cursorY += (targetY - cursorY) * 0.22;
+
+      context!.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      context!.clearRect(0, 0, width, height);
+      context!.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2347d9';
+
+      for (let y = spacing / 2; y < height; y += spacing) {
+        for (let x = spacing / 2; x < width; x += spacing) {
+          const dx = cursorX - x;
+          const dy = cursorY - y;
+          const distance = Math.hypot(dx, dy);
+          const influence = Math.pow(Math.max(0, 1 - distance / reach), 2) * opacity;
+          const offset = influence * 7;
+          context!.globalAlpha = 0.12 + influence * 0.36;
+          context!.beginPath();
+          context!.arc(x + (distance ? dx / distance * offset : 0), y + (distance ? dy / distance * offset : 0), 0.9 + influence * 1.1, 0, Math.PI * 2);
+          context!.fill();
+        }
+      }
+
+      while (trail.length && time - trail[0].time > 360) trail.shift();
+      trail.forEach((point) => {
+        const age = (time - point.time) / 360;
+        context!.globalAlpha = (1 - age) * 0.42;
+        context!.beginPath();
+        context!.arc(point.x, point.y, 1.4 * (1 - age * 0.45), 0, Math.PI * 2);
+        context!.fill();
+      });
+
+      if (opacity > 0 || trail.length) frame = requestAnimationFrame(draw);
+    };
+
+    const scheduleDraw = () => {
+      if (!frame) frame = requestAnimationFrame(draw);
+    };
+    const resize = () => {
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas!.width = Math.round(width * pixelRatio);
+      canvas!.height = Math.round(height * pixelRatio);
+      canvas!.style.width = `${width}px`;
+      canvas!.style.height = `${height}px`;
+      scheduleDraw();
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (reducedMotion || event.pointerType !== 'mouse') return;
+
+      const x = event.clientX;
+      const y = event.clientY;
+      const previous = trail[trail.length - 1];
+      if (!previous || Math.hypot(x - previous.x, y - previous.y) >= 12) {
+        trail.push({ x, y, time: performance.now() });
+      }
+      targetX = x;
+      targetY = y;
+      lastMoveAt = performance.now();
+      scheduleDraw();
+    };
+    const onMotionPreferenceChange = (event: MediaQueryListEvent) => {
+      reducedMotion = event.matches;
+      trail.length = 0;
+      scheduleDraw();
+    };
+    const themeObserver = new MutationObserver(scheduleDraw);
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    motionPreference.addEventListener('change', onMotionPreferenceChange);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    resize();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('pointermove', onPointerMove);
+      motionPreference.removeEventListener('change', onMotionPreferenceChange);
+      themeObserver.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="cursor-dot-field" aria-hidden="true" />;
 }
 
 function useTheme() {
@@ -1348,5 +1459,5 @@ function App() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><App /></React.StrictMode>
+  <React.StrictMode><><CursorDotField /><App /></></React.StrictMode>
 );
