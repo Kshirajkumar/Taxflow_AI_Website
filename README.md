@@ -9,12 +9,13 @@ npm install
 npm run dev
 ```
 
-Vite prints the local URL (normally `http://127.0.0.1:5174`). Available pages are `/`, `/product`, `/workflow-comparison`, `/get-app`, and `/waitlist`. Unknown paths show the branded 404 page.
+Vite prints the local URL (normally `http://127.0.0.1:5174`). Available pages are `/`, `/product`, `/workflow-comparison`, `/get-app`, `/waitlist`, `/privacy`, and `/terms`. Unknown paths show the branded 404 page.
 
 ## Product and workflow pages
 
 - `/workflow-comparison` describes common manual document-work steps alongside TaxFlow's intended workflow. It is qualitative—not a measured time-saving claim—and marks internal testing, human review, and roadmap status.
 - `/get-app` explains the product's availability. The install call to action clearly says the app is coming soon and links to the waitlist; it does not imply a download is available.
+- `/privacy` and `/terms` provide standalone website and waitlist disclosures; they do not represent product-specific privacy or security documentation.
 
 ## Connect the existing Supabase project
 
@@ -52,7 +53,7 @@ Import this website repository into Vercel and configure:
 
 These are public browser configuration values, not secrets. Vite explicitly embeds only these two named variables in the site; other Supabase environment values such as a service-role key are not passed through. Use only the Supabase Project URL and Publishable key (or legacy anon key). Delete any previous `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` entries, then redeploy after adding or changing the new Config variables.
 
-The Vercel configuration rewrites the `/product`, `/waitlist`, `/get-app`, and `/workflow-comparison` application routes to the Vite entry point. Other unknown paths use the branded `public/404.html` page. No Supabase authentication redirect settings are required for the waitlist.
+The Vercel configuration rewrites the `/product`, `/waitlist`, `/get-app`, `/workflow-comparison`, `/privacy`, and `/terms` application routes to the Vite entry point. Other unknown paths use the branded `public/404.html` page. No Supabase authentication redirect settings are required for the waitlist.
 
 ## Build
 

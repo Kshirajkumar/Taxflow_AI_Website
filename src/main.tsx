@@ -128,7 +128,7 @@ function CursorDotField() {
 
       context!.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       context!.clearRect(0, 0, width, height);
-      context!.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2347d9';
+      context!.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--cursor-dot-color').trim() || '#34435b';
 
       for (let y = spacing / 2; y < height; y += spacing) {
         for (let x = spacing / 2; x < width; x += spacing) {
@@ -137,7 +137,7 @@ function CursorDotField() {
           const distance = Math.hypot(dx, dy);
           const influence = Math.pow(Math.max(0, 1 - distance / reach), 2) * opacity;
           const offset = influence * 7;
-          context!.globalAlpha = 0.12 + influence * 0.36;
+          context!.globalAlpha = 0.075 + influence * 0.3;
           context!.beginPath();
           context!.arc(x + (distance ? dx / distance * offset : 0), y + (distance ? dy / distance * offset : 0), 0.9 + influence * 1.1, 0, Math.PI * 2);
           context!.fill();
@@ -147,7 +147,7 @@ function CursorDotField() {
       while (trail.length && time - trail[0].time > 360) trail.shift();
       trail.forEach((point) => {
         const age = (time - point.time) / 360;
-        context!.globalAlpha = (1 - age) * 0.42;
+        context!.globalAlpha = (1 - age) * 0.3;
         context!.beginPath();
         context!.arc(point.x, point.y, 1.4 * (1 - age * 0.45), 0, Math.PI * 2);
         context!.fill();
@@ -461,7 +461,7 @@ function WaitlistForm({ initialEmail = '' }: { initialEmail?: string }) {
       </label>
       <label className="consent-check">
         <input type="checkbox" name="consent" value="true" required />
-        <span>I agree that Taxflow AI may email me about early access. See the <a href="/#privacy">privacy notice</a>.</span>
+        <span>I agree that Taxflow AI may email me about early access. See the <a href="/privacy">privacy notice</a>.</span>
       </label>
       <label className="honeypot" aria-hidden="true">Leave this field empty<input autoComplete="off" name="website" tabIndex={-1} type="text" /></label>
       <button className="button button-dark form-submit" type="submit" disabled={state === 'submitting'}>
@@ -485,6 +485,47 @@ function WaitlistForm({ initialEmail = '' }: { initialEmail?: string }) {
 }
 
 function Footer({ productPage = false }: { productPage?: boolean }) {
+  const wordmarkRef = useRef<HTMLDivElement>(null);
+  const [typingProgress, setTypingProgress] = useState(0);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let frame = 0;
+
+    const updateProgress = () => {
+      frame = 0;
+      const element = wordmarkRef.current;
+      if (!element) return;
+      if (reducedMotion.matches) {
+        setTypingProgress(1);
+        return;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const end = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
+      const start = window.scrollY + rect.top - window.innerHeight;
+      setTypingProgress(end <= start ? 1 : Math.max(0, Math.min(1, (window.scrollY - start) / (end - start))));
+    };
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateProgress);
+    };
+    const onMotionPreferenceChange = () => scheduleUpdate();
+
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+    reducedMotion.addEventListener('change', onMotionPreferenceChange);
+    updateProgress();
+
+    return () => {
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+      reducedMotion.removeEventListener('change', onMotionPreferenceChange);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  const wordmark = 'Taxflow';
+
   return (
     <footer className="site-footer">
       <div className="footer-brand-block">
@@ -496,7 +537,16 @@ function Footer({ productPage = false }: { productPage?: boolean }) {
       <div className="footer-group"><h3>Product</h3><a href={productPage ? '/#how-it-works' : '#how-it-works'}>How it works</a><a href={productPage ? '/#features' : '#features'}>Features</a><a href="/workflow-comparison">Compare workflows</a><a href="/product">Product details</a></div>
       <div className="footer-group"><h3>Access</h3><a href="/get-app">Get the app</a><a href="/waitlist">Join the waitlist</a></div>
       <div className="footer-group"><h3>Trust</h3><a href={productPage ? '/#security' : '#security'}>Security</a><a href={productPage ? '/#faq' : '#faq'}>FAQ</a><a href={productPage ? '/#status' : '#status'}>Product status</a></div>
-      <div className="footer-bottom"><a href="/#privacy">Privacy</a><a href="/#terms">Terms</a><span>© {new Date().getFullYear()} TaxFlow AI</span><span>Names, files, and figures shown here are illustrative.</span></div>
+      <div className="footer-group"><h3>Legal</h3><a href="/privacy">Privacy notice</a><a href="/terms">Terms of use</a></div>
+      <div className="footer-wordmark-section" ref={wordmarkRef}>
+        <div className="footer-wordmark" role="img" aria-label={wordmark}>
+          <span aria-hidden="true">{[...wordmark].map((letter, index) => {
+            const letterProgress = Math.max(0, Math.min(1, typingProgress * wordmark.length - index));
+            return <span className="footer-wordmark-letter" key={`${letter}-${index}`} style={{ opacity: letterProgress, transform: `translateY(${(1 - letterProgress) * 0.08}em)` }}>{letter}</span>;
+          })}</span>
+        </div>
+      </div>
+      <div className="footer-bottom"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><span>© {new Date().getFullYear()} TaxFlow AI</span><span>Names, files, and figures shown here are illustrative.</span></div>
     </footer>
   );
 }
@@ -525,7 +575,7 @@ function WaitlistPage() {
             <div className="waitlist-form-heading"><span className="waitlist-card-icon"><Icon name="spark" size={18} /></span><div><span className="eyebrow">TAXFLOW AI · EARLY ACCESS</span><h2>Join the waitlist</h2></div></div>
             <p className="waitlist-form-intro">Start with your email. Share any extra details only if you’d like.</p>
             <WaitlistForm initialEmail={email} />
-            <p className="waitlist-privacy-note"><Icon name="shield" size={14} /> Your details are used only for early-access updates. <a href="/#privacy">Read our privacy note.</a></p>
+            <p className="waitlist-privacy-note"><Icon name="shield" size={14} /> Your details are used only for early-access updates. <a href="/privacy">Read our privacy notice.</a></p>
           </div>
         </section>
       </main>
@@ -1134,7 +1184,7 @@ function MarketingHome() {
               <details><summary>Is TaxFlow AI available now?</summary><p>Not for public use. The desktop product is a working demo in internal testing; we plan to complete security and quality work before any wider beta.</p></details>
               <details><summary>Does it file returns directly with a government portal?</summary><p>No. Government filing is not live. Filing support is a future, jurisdiction-by-jurisdiction plan and depends on authorised channels and explicit human approval.</p></details>
               <details><summary>Does AI make tax decisions or calculate the return?</summary><p>The product direction separates AI-assisted document reading from tax calculations. Calculations require validated rules and review; no autonomous filing is supported.</p></details>
-              <details><summary>Can I turn AI document reading off?</summary><p>AI extraction is designed to be optional in the current workflow. Check the deployed product’s settings and privacy documentation before submitting real client documents.</p></details>
+              <details><summary>Can I turn AI document reading off?</summary><p>AI extraction is designed to be optional in the current workflow. Check the deployed product’s settings and <a href="/privacy">privacy notice</a> before submitting real client documents.</p></details>
               <details><summary>Which chat integrations work today?</summary><p>The current product context describes Telegram intake in internal testing. WhatsApp is not represented as a generally available feature and requires a configured integration.</p></details>
               <details><summary>Which countries are supported?</summary><p>India is the initial product direction. Additional jurisdictions are on the roadmap and are not a claim of current filing coverage.</p></details>
               <details><summary>What does joining the waitlist do?</summary><p>It records the details you choose to provide and your consent so TaxFlow can contact you about early access. Joining is free and does not guarantee beta access.</p></details>
@@ -1143,15 +1193,6 @@ function MarketingHome() {
           </div>
         </section>
 
-        <section className="ledger-section" id="legal">
-          <div className="ledger-wrap">
-            <div className="section-intro"><span className="eyebrow">THE SMALL PRINT</span><h2>Privacy and terms,<br />in plain language.</h2></div>
-            <div className="legal-grid">
-              <article className="legal-copy" id="privacy"><span className="eyebrow">PRIVACY · UPDATED 19 OCTOBER 2026</span><h3>Your waitlist details</h3><p>We collect the email address you provide and, if you choose, your name, firm, role, country, and firm size. We use these details to understand who is interested and contact you about TaxFlow AI early access.</p><h4>What we do not do</h4><ul><li>We do not sell your waitlist details.</li><li>We do not use them for advertising.</li><li>This marketing site does not request or collect client tax documents.</li></ul><h4>Storage and deletion</h4><p>When configured, waitlist details are stored in the connected Supabase project. You may request removal using the contact details supplied in an email from TaxFlow AI. Do not submit sensitive client information in the waitlist form.</p></article>
-              <article className="legal-copy" id="terms"><span className="eyebrow">TERMS · PRODUCT IN DEVELOPMENT</span><h3>What joining means</h3><p>Joining the waitlist is free. It does not guarantee an invitation, create a purchase or service contract, or make TaxFlow AI available to you.</p><h4>A product in development</h4><p>Capabilities, security arrangements, and timelines may change. The product status section describes the current direction and explicitly distinguishes testing from planned capabilities.</p><h4>Not tax or legal advice</h4><p>TaxFlow AI is software in development, not a source of tax, accounting, or legal advice. Professionals remain responsible for reviewing any work product they use.</p></article>
-            </div>
-          </div>
-        </section>
         <div className="mobile-sticky-cta"><a className="btn btn-primary" href="/waitlist">Join the waitlist <span className="arrow">→</span></a></div>
       </main>
       <Footer />
@@ -1437,6 +1478,97 @@ function ProductPage() {
   );
 }
 
+function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
+  useReveal();
+  const isPrivacy = kind === 'privacy';
+  const sections: { title: string; paragraphs: string[]; bullets?: string[] }[] = isPrivacy
+    ? [
+      {
+        title: 'Information you provide',
+        paragraphs: ['The waitlist asks for your email address and consent to receive early-access updates. You may also choose to share your name, firm, role, country, and firm size. Please do not submit client records, tax documents, passwords, or other sensitive information.']
+      },
+      {
+        title: 'How we use it',
+        paragraphs: ['We use waitlist details to administer early access, understand interest in TaxFlow AI, and send the updates you agreed to receive. We do not sell waitlist details or use them for advertising.']
+      },
+      {
+        title: 'Where a submission goes',
+        paragraphs: ['When configured, the form sends your information to the existing TaxFlow Supabase project or to the waitlist endpoint configured for this website. If neither is configured, the form clearly identifies preview mode and keeps its demo submission in this browser only. This site also stores your theme preference in your browser.']
+      },
+      {
+        title: 'Service providers and storage',
+        paragraphs: ['The website host and any configured waitlist provider process information needed to deliver the site and store submissions. Those services may process technical information under their own terms. Waitlist records are accessible to authorised administrators; the public website cannot read them.']
+      },
+      {
+        title: 'Your choices and deletion',
+        paragraphs: ['You can choose not to join, and you can stop receiving updates by following the instructions in an email from TaxFlow AI. To ask for a waitlist record to be removed, reply to an early-access email you received from us. A fixed deletion schedule has not yet been published.']
+      },
+      {
+        title: 'Changes and questions',
+        paragraphs: ['We may update this notice as the website and waitlist change. The date above identifies the latest revision. Do not use the marketing website to share real client data; product security and data-handling arrangements should be verified before any client information is used with a future product.']
+      }
+    ]
+    : [
+      {
+        title: 'About this website',
+        paragraphs: ['These terms cover your use of the TaxFlow AI marketing website and its early-access waitlist. TaxFlow AI is in development; website descriptions, previews, and product plans are informational and may change.']
+      },
+      {
+        title: 'The waitlist is not product access',
+        paragraphs: ['Joining the waitlist is free. It does not guarantee an invitation, create a purchase or service contract, or make the product available to you. We may change, pause, or close the waitlist and may decide whether and when to invite participants.']
+      },
+      {
+        title: 'Use the site responsibly',
+        paragraphs: ['Use the website lawfully and do not attempt to disrupt it, access systems without permission, submit malicious content, or use the waitlist to provide information you are not authorised to share.']
+      },
+      {
+        title: 'Not professional advice',
+        paragraphs: ['Website content and illustrative product examples are not tax, accounting, legal, or other professional advice. A qualified professional must independently review work before relying on it. Do not upload client tax records or credentials to this marketing site.']
+      },
+      {
+        title: 'Product descriptions and third-party services',
+        paragraphs: ['Names, records, figures, and interface screens shown on the site may be illustrative. Current testing, planned features, integrations, security arrangements, and availability are described as accurately as possible but can change. The website may rely on third-party hosting and waitlist services, which are subject to their own terms.']
+      },
+      {
+        title: 'Updates to these terms',
+        paragraphs: ['We may revise these terms when the site or waitlist changes. Continued use after an update means you are viewing the current website terms. Nothing in this notice limits rights that cannot be excluded under applicable law. These plain-language terms should be reviewed by qualified counsel before production use.']
+      }
+    ];
+
+  return (
+    <>
+      <Header productPage />
+      <main className="legal-page">
+        <section className="legal-hero">
+          <div className="ledger-wrap">
+            <a href="/" className="back-link"><Icon name="arrow" size={15} /> Back to the website</a>
+            <span className="eyebrow">{isPrivacy ? 'YOUR INFORMATION, EXPLAINED' : 'THE RULES OF THE ROAD'}</span>
+            <h1>{isPrivacy ? <>A clear note on<br /><em>your privacy.</em></> : <>Straightforward<br /><em>website terms.</em></>}</h1>
+            <p>{isPrivacy
+              ? 'Here is what the TaxFlow AI website collects when you join the waitlist, how it is used, and the choices you have.'
+              : 'A plain-language guide to using this website and joining the early-access list while TaxFlow AI is in development.'}</p>
+            <span className="legal-updated">LAST UPDATED · 19 OCTOBER 2026</span>
+          </div>
+        </section>
+        <section className="legal-sections ledger-wrap" aria-label={isPrivacy ? 'Privacy notice details' : 'Terms of use details'}>
+          {sections.map((section, index) => (
+            <article className="legal-section" data-reveal key={section.title}>
+              <span className="legal-section-number">{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <h2>{section.title}</h2>
+                {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                {section.bullets && <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}
+              </div>
+            </article>
+          ))}
+          <p className="legal-disclaimer"><Icon name="info" size={15} /> This page describes the website and waitlist—not the data practices of a future TaxFlow product. Review the deployed product’s applicable documentation before using it with client information.</p>
+        </section>
+      </main>
+      <Footer productPage />
+    </>
+  );
+}
+
 function App() {
   useEffect(() => {
     const path = window.location.pathname;
@@ -1445,6 +1577,8 @@ function App() {
       '/waitlist': 'Join the waitlist — Taxflow.AI',
       '/get-app': 'Get the TaxFlow app — Coming soon',
       '/workflow-comparison': 'Workflow comparison — Taxflow.AI',
+      '/privacy': 'Privacy notice — Taxflow.AI',
+      '/terms': 'Terms of use — Taxflow.AI',
     };
     document.title = titles[path] ?? (path === '/' ? 'Taxflow.AI — More time for the work that matters' : 'Page not found — Taxflow.AI');
   }, []);
@@ -1453,6 +1587,8 @@ function App() {
   if (path === '/waitlist') return <WaitlistPage />;
   if (path === '/get-app') return <GetAppPage />;
   if (path === '/workflow-comparison') return <WorkflowComparisonPage />;
+  if (path === '/privacy') return <LegalPage kind="privacy" />;
+  if (path === '/terms') return <LegalPage kind="terms" />;
   if (path === '/product') return <ProductPage />;
   if (path === '/') return <MarketingHome />;
   return <NotFoundPage />;
