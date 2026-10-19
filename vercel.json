@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/product",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/waitlist",
+      "destination": "/index.html"
+    }
+  ]
+}
