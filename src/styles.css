@@ -44,6 +44,20 @@
 :root { --cursor-dot-color: #34435b; }
 html[data-theme="dark"] { --cursor-dot-color: #5d73ce; }
 html[data-theme="dark"] .cursor-dot-field { opacity: .68; }
+.scroll-journey { position: absolute; z-index: 2; top: 0; left: 0; overflow: visible; pointer-events: none; }
+.scroll-journey-track, .scroll-journey-progress { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.scroll-journey-track { stroke: color-mix(in srgb, var(--accent) 17%, transparent); stroke-width: 1.4; }
+.scroll-journey-progress { stroke: color-mix(in srgb, var(--accent) 68%, transparent); stroke-width: 1.8; }
+.scroll-journey-node { fill: var(--paper); stroke: color-mix(in srgb, var(--accent) 44%, transparent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.scroll-journey-node.is-final { fill: var(--accent); stroke: var(--paper); stroke-width: 2.5; }
+.scroll-journey-marker-halo { fill: color-mix(in srgb, var(--accent) 18%, transparent); stroke: color-mix(in srgb, var(--accent) 38%, transparent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.scroll-journey-marker-core { fill: var(--accent); stroke: var(--paper); stroke-width: 2; vector-effect: non-scaling-stroke; }
+html[data-theme="dark"] .scroll-journey-track { stroke: rgba(169,186,255,.24); }
+html[data-theme="dark"] .scroll-journey-progress { stroke: rgba(169,186,255,.78); }
+html[data-theme="dark"] .scroll-journey-node { fill: var(--paper); stroke: rgba(169,186,255,.52); }
+html[data-theme="dark"] .scroll-journey-node.is-final { fill: #a9baff; stroke: var(--paper); }
+html[data-theme="dark"] .scroll-journey-marker-halo { fill: rgba(102,217,232,.18); stroke: rgba(102,217,232,.5); }
+html[data-theme="dark"] .scroll-journey-marker-core { fill: #66d9e8; stroke: var(--paper); }
 
 html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 
@@ -1625,6 +1639,11 @@ html[data-theme="dark"] .comparison-page-note { border-color: var(--line); backg
 }
 @media (prefers-reduced-motion: reduce) {
   .footer-wordmark-letter { transition: none; }
+}
+@media (max-width: 680px) {
+  .scroll-journey-track { stroke-width: 1.1; }
+  .scroll-journey-progress { stroke-width: 1.4; }
+  .scroll-journey-node { stroke-width: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .get-app-button, .get-app-button::after, .get-app-button > svg:last-child,
