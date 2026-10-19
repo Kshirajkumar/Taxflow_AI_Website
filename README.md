@@ -26,13 +26,13 @@ The website uses the same Supabase project as the TaxFlow app. It stores waitlis
 4. Copy `.env.example` to `.env.local` and set:
 
    ```dotenv
-   VITE_SUPABASE_URL=the-existing-project-url
-   VITE_SUPABASE_ANON_KEY=the-existing-project-publishable-or-anon-key
+   SUPABASE_URL=the-existing-project-url
+   SUPABASE_ANON_KEY=the-existing-project-publishable-or-anon-key
    ```
 
 5. Restart the local Vite server. Without these public settings, the form clearly labels submissions as browser-only preview data; it does not claim they were sent.
 
-The `VITE_` prefix is required because this is a browser app. Vite embeds these values in the built JavaScript, so Supabase's URL and publishable/legacy anon key are public by design. If Vercel warns that a `VITE_` value is exposed to the browser, that warning is expected for these two public values: keep the `VITE_` names and do not change them to Vercel-only `Config` variables. Marking a value “Sensitive” can hide it in Vercel's dashboard, but does not make a `VITE_` value secret in the deployed site. Never use a Supabase secret key (`sb_secret_...`) or `SUPABASE_SERVICE_ROLE_KEY` here.
+For Vercel, use the names `SUPABASE_URL` and `SUPABASE_ANON_KEY` without the `VITE_` prefix, and set their type to **Config** when asked. Vite's build configuration explicitly passes only these two named public values to the browser; it does not expose other `SUPABASE_*` variables. The Supabase URL and Publishable/legacy anon key are public browser configuration—not secrets—so they will be present in the deployed JavaScript. Never use a Supabase secret key (`sb_secret_...`) or `SUPABASE_SERVICE_ROLE_KEY` here. Remove any old `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` entries from Vercel after adding the replacement variables.
 
 The form calls `public.join_website_waitlist` with the required consent and optional name, firm, role, country, and firm-size fields. Duplicate emails are accepted without disclosing whether an address is already on the list. The RPC stores a submission; it does not send an email. Add a server-side email provider or Supabase Edge Function separately if email notifications are required.
 
@@ -48,9 +48,9 @@ Import this website repository into Vercel and configure:
 - **Root directory:** `./` (the repository root)
 - **Build command:** `npm run build`
 - **Output directory:** `dist`
-- **Environment variables:** `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, using the same existing Supabase project values as local development. Add them for each Vercel environment you use.
+- **Environment variables:** `SUPABASE_URL` and `SUPABASE_ANON_KEY`, using the same existing Supabase project values as local development. Set them as **Config** values, and add them for each Vercel environment you use.
 
-These are public browser configuration values, not secrets. Vercel may flag their `VITE_` prefix because the values are included in browser JavaScript; keep the prefix so the app can read them. Use only the Supabase Project URL and Publishable key (or legacy anon key), never a secret/service-role key. Redeploy after adding or changing them.
+These are public browser configuration values, not secrets. Vite explicitly embeds only these two named variables in the site; other Supabase environment values such as a service-role key are not passed through. Use only the Supabase Project URL and Publishable key (or legacy anon key). Delete any previous `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` entries, then redeploy after adding or changing the new Config variables.
 
 The Vercel configuration rewrites the `/product`, `/waitlist`, `/get-app`, and `/workflow-comparison` application routes to the Vite entry point. Other unknown paths use the branded `public/404.html` page. No Supabase authentication redirect settings are required for the waitlist.
 
