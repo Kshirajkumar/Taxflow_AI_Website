@@ -208,217 +208,42 @@ function CursorDotField() {
   return <canvas ref={canvasRef} className="cursor-dot-field" aria-hidden="true" />;
 }
 
-function ScrollJourney() {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const trackRef = useRef<SVGPathElement>(null);
-  const progressRef = useRef<SVGPathElement>(null);
-  const markerRef = useRef<SVGGElement>(null);
-  const nodesRef = useRef<SVGGElement>(null);
+function HeaderScrollProgress() {
+  const progressRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (window.location.pathname !== '/') return;
-
-    const svg = svgRef.current;
-    const track = trackRef.current;
     const progress = progressRef.current;
-    const marker = markerRef.current;
-    const nodes = nodesRef.current;
-    if (!svg || !track || !progress || !marker || !nodes) return;
+    if (!progress) return;
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let active = true;
     let frame = 0;
-    let routeLength = 0;
-    let routeD = '';
-    let milestones: { scroll: number; length: number }[] = [];
-
-    const findAnchor = (section: HTMLElement, index: number, width: number) => {
-      const isFinal = section.classList.contains('footer-wordmark-section');
-      const isFooter = section.classList.contains('site-footer');
-      const heading = isFinal
-        ? section.querySelector<HTMLElement>('.footer-wordmark')
-        : isFooter
-          ? section.querySelector<HTMLElement>('.footer-group h3')
-          : section.querySelector<HTMLElement>('h1, h2');
-      const rect = (heading ?? section).getBoundingClientRect();
-      const y = rect.top + window.scrollY + (isFinal ? rect.height * 0.1 : rect.height * 0.52);
-
-      return {
-        x: isFinal ? width / 2 : index % 2 === 0 ? (width <= 680 ? 8 : 16) : width - (width <= 680 ? 8 : 16),
-        y,
-        scroll: Math.min(
-          Math.max(0, document.documentElement.scrollHeight - window.innerHeight),
-          Math.max(0, y - window.innerHeight * 0.48)
-        ),
-        isFinal
-      };
-    };
-
-    const measureSectionEnd = (section: HTMLElement) => {
-      if (section.classList.contains('footer-wordmark-section')) {
-        const rect = section.getBoundingClientRect();
-        return rect.top + window.scrollY + rect.height * 0.1;
-      }
-
-      if (section.classList.contains('site-footer')) {
-        const groupBottoms = [...section.querySelectorAll<HTMLElement>('.footer-group')].map((group) => {
-          const rect = group.getBoundingClientRect();
-          return rect.bottom + window.scrollY;
-        });
-        return Math.max(...groupBottoms, section.getBoundingClientRect().top + window.scrollY);
-      }
-
-      const content = section.querySelector<HTMLElement>('.ledger-wrap, .section-wrap') ?? section;
-      const childBottoms = [...content.children].map((child) => {
-        const rect = child.getBoundingClientRect();
-        return rect.bottom + window.scrollY;
-      });
-      const sectionRect = section.getBoundingClientRect();
-      return Math.max(...childBottoms, sectionRect.top + window.scrollY);
-    };
-
-    const rebuild = () => {
+    const updateProgress = () => {
       frame = 0;
-      const width = document.documentElement.clientWidth;
-      const height = document.documentElement.scrollHeight;
-      const sections = [...document.querySelectorAll<HTMLElement>('main#top > section, .site-footer, .site-footer .footer-wordmark-section')];
-      if (!sections.length) return;
-
-      const anchors = sections.map((section, index) => findAnchor(section, index, width));
-      const segments: { d: string; length: number }[] = [];
-      const temporaryPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      temporaryPath.setAttribute('visibility', 'hidden');
-      svg.appendChild(temporaryPath);
-
-      for (let index = 0; index < anchors.length - 1; index += 1) {
-        const current = anchors[index];
-        const next = anchors[index + 1];
-        const contentEnd = measureSectionEnd(sections[index]);
-        const gap = next.y - contentEnd;
-        const hasClearGap = gap > 36;
-        const startY = hasClearGap ? contentEnd : current.y + (next.y - current.y) * 0.58;
-        const endY = hasClearGap ? next.y : current.y + (next.y - current.y) * 0.82;
-        const gapHeight = Math.max(1, endY - startY);
-        const startLead = Math.max(1, startY - current.y);
-        const endLead = Math.max(1, next.y - endY);
-        const leftRail = current.x < width / 2;
-        const currentSweep = (leftRail ? -1 : 1) * Math.min(9, width * 0.012);
-        const nextSweep = (next.x < width / 2 ? -1 : 1) * Math.min(9, width * 0.012);
-        const d = [
-          `C ${current.x + currentSweep} ${current.y + startLead * 0.28}`,
-          `${current.x + currentSweep} ${startY - startLead * 0.2} ${current.x} ${startY}`,
-          `C ${current.x} ${startY + gapHeight * 0.2}`,
-          `${next.x} ${endY - gapHeight * 0.2} ${next.x} ${endY}`,
-          `C ${next.x + nextSweep} ${endY + endLead * 0.2}`,
-          `${next.x + nextSweep} ${next.y - endLead * 0.28} ${next.x} ${next.y}`
-        ].join(' ');
-        temporaryPath.setAttribute('d', `M ${current.x} ${current.y} ${d}`);
-        segments.push({ d, length: temporaryPath.getTotalLength() });
-      }
-      temporaryPath.remove();
-
-      routeD = `M ${anchors[0].x} ${anchors[0].y} ${segments.map((segment) => segment.d).join(' ')}`;
-      track.setAttribute('d', routeD);
-      progress.setAttribute('d', routeD);
-      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-      svg.setAttribute('width', String(width));
-      svg.setAttribute('height', String(height));
-      svg.style.height = `${height}px`;
-
-      routeLength = 0;
-      milestones = [{ scroll: anchors[0].scroll, length: 0 }];
-      segments.forEach((segment, index) => {
-        routeLength += segment.length;
-        milestones.push({ scroll: anchors[index + 1].scroll, length: routeLength });
-      });
-
-      progress.setAttribute('stroke-dasharray', `${routeLength} ${routeLength}`);
-      while (nodes.firstChild) nodes.removeChild(nodes.firstChild);
-      anchors.forEach((anchor) => {
-        const stop = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        stop.setAttribute('class', `scroll-journey-stop${anchor.isFinal ? ' is-final' : ''}`);
-        stop.setAttribute('transform', `translate(${anchor.x} ${anchor.y})`);
-
-        const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        node.setAttribute('r', anchor.isFinal ? '5' : '2.5');
-        node.setAttribute('class', 'scroll-journey-node');
-        stop.appendChild(node);
-
-        if (!anchor.isFinal) {
-          const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          arrow.setAttribute('d', anchor.x < width / 2 ? 'M 3 -5 L 8 0 L 3 5' : 'M -3 -5 L -8 0 L -3 5');
-          arrow.setAttribute('class', `scroll-journey-stop-arrow ${anchor.x < width / 2 ? 'inward-right' : 'inward-left'}`);
-          stop.appendChild(arrow);
-        }
-
-        nodes.appendChild(stop);
-      });
-
-      updatePosition();
+      const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const fraction = scrollableHeight > 0 ? window.scrollY / scrollableHeight : 0;
+      progress.style.transform = `scaleX(${Math.max(0, Math.min(1, fraction))})`;
     };
-
-    const updatePosition = () => {
-      frame = 0;
-      if (!routeLength || !milestones.length) return;
-
-      const scrollY = window.scrollY;
-      let index = 0;
-      while (index < milestones.length - 1 && scrollY >= milestones[index + 1].scroll) index += 1;
-      const start = milestones[index];
-      const end = milestones[Math.min(index + 1, milestones.length - 1)];
-      const segmentProgress = end.scroll <= start.scroll
-        ? 1
-        : Math.max(0, Math.min(1, (scrollY - start.scroll) / (end.scroll - start.scroll)));
-      const distance = reducedMotion.matches
-        ? routeLength
-        : start.length + (end.length - start.length) * segmentProgress;
-      const point = track!.getPointAtLength(Math.min(routeLength, distance));
-      const activeIndex = reducedMotion.matches ? milestones.length - 1 : index;
-      [...nodes!.children].forEach((stop, stopIndex) => {
-        stop.classList.toggle('is-active', stopIndex === activeIndex);
-        stop.classList.toggle('is-complete', stopIndex < activeIndex);
-      });
-
-      progress!.setAttribute('stroke-dashoffset', String(routeLength - distance));
-      marker!.setAttribute('transform', `translate(${point.x} ${point.y})`);
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateProgress);
     };
+    const resizeObserver = new ResizeObserver(scheduleUpdate);
 
-    const schedule = (callback: () => void) => {
-      if (active && !frame) frame = window.requestAnimationFrame(callback);
-    };
-    const onMotionPreferenceChange = () => schedule(rebuild);
-    const resizeObserver = new ResizeObserver(() => schedule(rebuild));
-    document.querySelectorAll<HTMLElement>('main#top > section, .site-footer, .site-footer .footer-wordmark-section').forEach((section) => resizeObserver.observe(section));
-
-    const onScroll = () => schedule(updatePosition);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    reducedMotion.addEventListener('change', onMotionPreferenceChange);
-    void document.fonts.ready.then(() => schedule(rebuild));
-    rebuild();
+    resizeObserver.observe(document.body);
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+    updateProgress();
 
     return () => {
-      active = false;
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      reducedMotion.removeEventListener('change', onMotionPreferenceChange);
       resizeObserver.disconnect();
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, []);
 
-  if (window.location.pathname !== '/') return null;
-
   return (
-    <svg ref={svgRef} className="scroll-journey" aria-hidden="true" focusable="false">
-      <path ref={trackRef} className="scroll-journey-track" />
-      <path ref={progressRef} className="scroll-journey-progress" />
-      <g ref={nodesRef} className="scroll-journey-nodes" />
-      <g ref={markerRef} className="scroll-journey-marker">
-        <circle className="scroll-journey-marker-halo" r="10" />
-        <circle className="scroll-journey-marker-core" r="4" />
-      </g>
-    </svg>
+    <div className="header-scroll-progress" aria-hidden="true">
+      <span ref={progressRef} />
+    </div>
   );
 }
 
@@ -496,6 +321,7 @@ function Header({ productPage = false }: { productPage?: boolean }) {
           Join the waitlist <span className="arrow" aria-hidden="true">→</span>
         </a>
       </nav>
+      <HeaderScrollProgress />
     </header>
   );
 }
@@ -1811,5 +1637,5 @@ function App() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><><CursorDotField /><App /><ScrollJourney /></></React.StrictMode>
+  <React.StrictMode><><CursorDotField /><App /></></React.StrictMode>
 );
