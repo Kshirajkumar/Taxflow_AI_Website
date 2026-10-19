@@ -708,7 +708,7 @@ html[data-theme="dark"] .closing-line { color: #9eafa1; }
 .nav-auth { display: flex; align-items: center; gap: 13px; margin-left: 10px; }
 .nav-login, .nav-text-button { color: var(--muted); font-size: 13px; }
 .nav-login:hover, .nav-text-button:hover { color: var(--accent); }
-.nav-cta { min-height: 40px; padding: 0 15px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-size: 12px; transition: transform .2s, box-shadow .2s; }
+.nav-cta { min-height: 44px; margin-left: 10px; padding: 0 18px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-size: 13px; transition: transform .2s, box-shadow .2s; }
 .nav-cta:hover, .button-dark:hover { transform: translateY(-2px); background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 20px -12px var(--accent); }
 .theme-toggle { margin-left: 12px; border-color: var(--line); background: var(--surface-muted); }
 .theme-toggle-thumb { background: var(--surface); }
@@ -739,7 +739,8 @@ html[data-theme="dark"] .closing-line { color: #9eafa1; }
 .hero-facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0; padding: 0; color: var(--muted); font-size: 12px; list-style: none; }
 .hero-facts li { display: inline-flex; align-items: center; gap: 8px; }
 .hero-facts li::before { width: 9px; height: 5px; border-bottom: 1.5px solid var(--success); border-left: 1.5px solid var(--success); content: ''; transform: rotate(-45deg) translateY(-2px); }
-.hero-actions-ledger { display: flex; flex-wrap: wrap; gap: 10px; }
+.hero-actions-ledger { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.hero-actions-ledger .btn-primary { min-height: 60px; padding-inline: 25px; font-size: 15px; }
 .btn-ghost { border-color: var(--line-strong); background: var(--surface); color: var(--ink); }
 .btn-ghost:hover { transform: translateY(-2px); border-color: var(--muted); }
 .hero-scene-column { min-width: 0; }
@@ -1101,6 +1102,7 @@ html[data-theme="dark"] .closing-line { color: #9eafa1; }
   .hero-email-form { flex-direction: column; }
   .hero-email-form .btn { width: 100%; }
   .hero-actions-ledger { width: 100%; }
+  .hero-actions-ledger { gap: 14px; }
   .hero-actions-ledger .btn { flex: 1; }
   .pain-grid, .principle-grid, .tested-feature-grid, .status-columns, .trust-grid { grid-template-columns: 1fr; }
   .pain-card, .principle-grid article { padding: 20px 0; border-left: 0; border-top: 1px solid var(--line); }
