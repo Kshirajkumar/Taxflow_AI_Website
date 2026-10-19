@@ -10,6 +10,7 @@ type IconName =
   | 'check'
   | 'clock'
   | 'document'
+  | 'download'
   | 'eye'
   | 'file'
   | 'folder'
@@ -47,6 +48,7 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
     check: <path d="m5 12 4 4L19 6" />,
     clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
     document: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M8 13h8M8 17h6" /></>,
+    download: <><path d="M12 3v12m0 0 4-4m-4 4-4-4" /><path d="M5 17v3h14v-3" /></>,
     eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></>,
     file: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="m9 15 2 2 4-4" /></>,
     folder: <><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M3 10h18" /></>,
@@ -162,6 +164,8 @@ function Header({ productPage = false }: { productPage?: boolean }) {
         <a href={`${prefix}status`} onClick={() => setMenuOpen(false)}>Status</a>
         <a href={`${prefix}faq`} onClick={() => setMenuOpen(false)}>FAQ</a>
         <a className="nav-product" href="/product" onClick={() => setMenuOpen(false)}>Product details</a>
+        <a className="nav-comparison" href="/workflow-comparison" onClick={() => setMenuOpen(false)}>Compare workflows</a>
+        <a className="nav-get-app" href="/get-app" onClick={() => setMenuOpen(false)}>Get the app</a>
         <ThemeToggle />
         <a className="nav-cta" href="/waitlist" onClick={() => setMenuOpen(false)}>
           Join the waitlist <span className="arrow" aria-hidden="true">→</span>
@@ -378,9 +382,9 @@ function Footer({ productPage = false }: { productPage?: boolean }) {
         </a>
         <p>Document collection, reading, and review for accounting practices.</p>
       </div>
-      <div className="footer-group"><h3>Product</h3><a href={productPage ? '/#how-it-works' : '#how-it-works'}>How it works</a><a href={productPage ? '/#features' : '#features'}>Features</a><a href="/product">Product details</a></div>
+      <div className="footer-group"><h3>Product</h3><a href={productPage ? '/#how-it-works' : '#how-it-works'}>How it works</a><a href={productPage ? '/#features' : '#features'}>Features</a><a href="/workflow-comparison">Compare workflows</a><a href="/product">Product details</a></div>
+      <div className="footer-group"><h3>Access</h3><a href="/get-app">Get the app</a><a href="/waitlist">Join the waitlist</a></div>
       <div className="footer-group"><h3>Trust</h3><a href={productPage ? '/#security' : '#security'}>Security</a><a href={productPage ? '/#faq' : '#faq'}>FAQ</a><a href={productPage ? '/#status' : '#status'}>Product status</a></div>
-      <div className="footer-group"><h3>Get started</h3><a href="/waitlist">Join the waitlist</a></div>
       <div className="footer-bottom"><a href="/#privacy">Privacy</a><a href="/#terms">Terms</a><span>© {new Date().getFullYear()} TaxFlow AI</span><span>Names, files, and figures shown here are illustrative.</span></div>
     </footer>
   );
@@ -438,6 +442,187 @@ function NotFoundPage() {
         </section>
       </main>
       <Footer />
+    </>
+  );
+}
+
+function GetAppPage() {
+  const [showComingSoonMessage, setShowComingSoonMessage] = useState(false);
+  useReveal();
+
+  return (
+    <>
+      <Header productPage />
+      <main className="get-app-page">
+        <section className="get-app-hero ledger-wrap">
+          <div className="get-app-copy" data-reveal>
+            <a href="/" className="back-link"><Icon name="arrow" size={15} /> Back to overview</a>
+            <span className="eyebrow"><span className="status-dot-live" /> BUILT FOR ACCOUNTING PRACTICES</span>
+            <h1>One workspace for<br /><em>the work behind the numbers.</em></h1>
+            <p>TaxFlow is being designed to bring document collection, AI-assisted preparation and review into a more connected practice workflow. The app is not yet available to install.</p>
+            <div className="get-app-action">
+              <button className="get-app-button" type="button" onClick={() => setShowComingSoonMessage(true)}>
+                <span className="get-app-button-icon"><Icon name="download" size={18} /></span>
+                <span>Get the TaxFlow app</span>
+                <Icon name="arrow" size={17} />
+              </button>
+              <span className="coming-soon-badge"><i /> COMING SOON</span>
+            </div>
+            {showComingSoonMessage && (
+              <div className="get-app-message" role="status" aria-live="polite">
+                <span><Icon name="spark" size={17} /></span>
+                <p><strong>The app isn’t ready to install yet.</strong><br />Join the waitlist and we’ll share an update when early access is available.</p>
+                <a href="/waitlist">Join the waitlist <Icon name="arrow" size={14} /></a>
+              </div>
+            )}
+            <p className="get-app-note"><Icon name="info" size={15} /> No download is available yet. We’ll announce availability when the app is ready.</p>
+          </div>
+          <div className="get-app-visual" data-reveal>
+            <div className="get-app-window">
+              <div className="get-app-window-bar"><span><i /><i /><i /></span><strong>TaxFlow · Practice workspace</strong><span className="concept-label">CONCEPT</span></div>
+              <div className="get-app-window-body">
+                <div className="get-app-side">
+                  <span className="get-app-mark"><BrandGlyph size={22} /></span>
+                  <span className="get-app-side-item is-active"><Icon name="stack" size={16} /></span>
+                  <span className="get-app-side-item"><Icon name="users" size={16} /></span>
+                  <span className="get-app-side-item"><Icon name="calendar" size={16} /></span>
+                  <span className="get-app-side-item"><Icon name="folder" size={16} /></span>
+                </div>
+                <div className="get-app-workspace">
+                  <span className="eyebrow">A CLEARER VIEW OF THE WORK</span>
+                  <h2>From incoming files<br />to informed review.</h2>
+                  <p>A concept illustration of the intended workflow—not a released app screen.</p>
+                  <div className="get-app-workflow">
+                    <div><span className="get-app-workflow-icon"><Icon name="folder" size={16} /></span><span><strong>Collect &amp; organise</strong><small>Keep documents with their client work</small></span><Icon name="check" size={16} /></div>
+                    <div><span className="get-app-workflow-icon"><Icon name="spark" size={16} /></span><span><strong>Prepare for review</strong><small>AI-assisted reading, where enabled</small></span><Icon name="arrow" size={16} /></div>
+                    <div><span className="get-app-workflow-icon"><Icon name="eye" size={16} /></span><span><strong>Keep the accountant in control</strong><small>Originals and review stay together</small></span><span className="review-chip">HUMAN REVIEW</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="get-app-visual-caption"><Icon name="shield" size={14} /> Product concept only · no live client data</p>
+          </div>
+        </section>
+        <section className="get-app-next ledger-section ledger-section-tint">
+          <div className="ledger-wrap get-app-next-inner">
+            <div><span className="eyebrow">UNTIL THEN</span><h2>See how the workflow<br /><em>is designed to fit together.</em></h2><p>Explore the current process comparison, or follow the product as it develops.</p></div>
+            <div className="get-app-next-actions">
+              <a className="button button-dark" href="/workflow-comparison">Compare workflows <Icon name="arrow" size={16} /></a>
+              <a className="btn btn-ghost" href="/waitlist">Join the waitlist <Icon name="arrow" size={16} /></a>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer productPage />
+    </>
+  );
+}
+
+const workflowComparisonRows = [
+  {
+    number: '01',
+    title: 'Requesting and receiving documents',
+    current: 'Requests may go out through separate messages, email threads or calls; incoming files can land in different places.',
+    taxflow: 'The product is designed to bring configured requests and incoming client files into a connected client workflow.',
+    status: 'WORKFLOW DIRECTION',
+    icon: 'message' as const
+  },
+  {
+    number: '02',
+    title: 'Sorting and finding the source',
+    current: 'A person may need to rename, move and match each file to the right client or period.',
+    taxflow: 'Client and document organisation is part of the intended workspace, with the source document kept close to the review.',
+    status: 'IN INTERNAL TESTING',
+    icon: 'folder' as const
+  },
+  {
+    number: '03',
+    title: 'Capturing document details',
+    current: 'Names, dates and amounts can require manual reading and re-entry from each supported document.',
+    taxflow: 'AI-assisted extraction is intended to prepare supported document details for checking—not to make the accountant’s decision.',
+    status: 'AI-ASSISTED · VERIFY',
+    icon: 'spark' as const
+  },
+  {
+    number: '04',
+    title: 'Checking and correcting work',
+    current: 'The original and re-keyed values may need to be compared by switching between a file and a separate working sheet.',
+    taxflow: 'The review direction keeps extracted details with their original so a person can inspect, correct and approve the work.',
+    status: 'HUMAN APPROVAL',
+    icon: 'eye' as const
+  },
+  {
+    number: '05',
+    title: 'Preparing the next step',
+    current: 'A professional gathers reviewed information and prepares the next work product using the practice’s existing process.',
+    taxflow: 'The product roadmap aims to connect review-ready work to supported preparation steps; validated filing capabilities remain phased.',
+    status: 'PHASED ROADMAP',
+    icon: 'file' as const
+  }
+];
+
+function WorkflowComparisonPage() {
+  useReveal();
+
+  return (
+    <>
+      <Header productPage />
+      <main className="workflow-comparison-page">
+        <section className="comparison-page-hero">
+          <div className="ledger-wrap comparison-page-hero-inner" data-reveal>
+            <a href="/" className="back-link"><Icon name="arrow" size={15} /> Back to overview</a>
+            <span className="eyebrow">A PRACTICAL, STEP-BY-STEP COMPARISON</span>
+            <h1>Same professional judgement.<br /><em>Less disconnected work.</em></h1>
+            <p>See how a typical document-heavy practice workflow can differ from the connected process TaxFlow is being designed to support.</p>
+            <div className="comparison-page-legend">
+              <span><i className="legend-dot manual" /> Common manual workflow</span>
+              <span><i className="legend-dot assisted" /> TaxFlow product direction</span>
+            </div>
+          </div>
+        </section>
+        <section className="comparison-journey ledger-wrap" aria-label="Workflow comparison">
+          {workflowComparisonRows.map((row, index) => (
+            <article className="comparison-journey-row" data-reveal key={row.number} style={{ '--delay': `${index * 75}ms` } as React.CSSProperties}>
+              <div className="comparison-journey-index"><span>{row.number}</span>{index < workflowComparisonRows.length - 1 && <i />}</div>
+              <div className="comparison-journey-content">
+                <h2>{row.title}</h2>
+                <div className="comparison-journey-columns">
+                  <div className="comparison-journey-card manual">
+                    <span className="comparison-card-label"><Icon name="clock" size={15} /> COMMON MANUAL PROCESS</span>
+                    <p>{row.current}</p>
+                  </div>
+                  <div className="comparison-journey-arrow" aria-hidden="true"><Icon name="arrow" size={18} /></div>
+                  <div className="comparison-journey-card assisted">
+                    <span className="comparison-card-label"><Icon name={row.icon} size={15} /> TAXFLOW DIRECTION</span>
+                    <p>{row.taxflow}</p>
+                    <span className="comparison-row-status">{row.status}</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+          <div className="comparison-page-note" data-reveal>
+            <Icon name="info" size={17} />
+            <p><strong>A fair comparison, not a performance claim.</strong><br />Practices work in different ways. This describes common manual steps and TaxFlow’s product direction; it is not a measured time-saving study or a claim that every listed capability is available today.</p>
+          </div>
+        </section>
+        <section className="comparison-human-section">
+          <div className="ledger-wrap comparison-human-inner">
+            <span className="eyebrow">WHAT DOES NOT CHANGE</span>
+            <h2>Automation can prepare the work.<br /><em>The professional owns the decision.</em></h2>
+            <div className="comparison-human-points">
+              <div><Icon name="eye" size={19} /><strong>Review the source</strong><p>Original documents stay part of the review context.</p></div>
+              <div><Icon name="check" size={19} /><strong>Correct the details</strong><p>Extracted information is something to inspect, not assume.</p></div>
+              <div><Icon name="shield" size={19} /><strong>Approve consequential work</strong><p>Taxflow is not designed to file without explicit human approval.</p></div>
+            </div>
+            <div className="comparison-human-actions">
+              <a className="button button-dark" href="/get-app">Get the app <Icon name="arrow" size={16} /></a>
+              <a className="btn btn-ghost" href="/waitlist">Join the waitlist <Icon name="arrow" size={16} /></a>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer productPage />
     </>
   );
 }
@@ -1147,12 +1332,16 @@ function App() {
     const titles: Record<string, string> = {
       '/product': 'Product details — Taxflow.AI',
       '/waitlist': 'Join the waitlist — Taxflow.AI',
+      '/get-app': 'Get the TaxFlow app — Coming soon',
+      '/workflow-comparison': 'Workflow comparison — Taxflow.AI',
     };
     document.title = titles[path] ?? (path === '/' ? 'Taxflow.AI — More time for the work that matters' : 'Page not found — Taxflow.AI');
   }, []);
 
   const path = window.location.pathname;
   if (path === '/waitlist') return <WaitlistPage />;
+  if (path === '/get-app') return <GetAppPage />;
+  if (path === '/workflow-comparison') return <WorkflowComparisonPage />;
   if (path === '/product') return <ProductPage />;
   if (path === '/') return <MarketingHome />;
   return <NotFoundPage />;

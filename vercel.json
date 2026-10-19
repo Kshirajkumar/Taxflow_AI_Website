@@ -7,6 +7,14 @@
     {
       "source": "/waitlist",
       "destination": "/index.html"
+    },
+    {
+      "source": "/get-app",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/workflow-comparison",
+      "destination": "/index.html"
     }
   ]
 }
