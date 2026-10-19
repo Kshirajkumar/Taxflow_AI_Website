@@ -125,6 +125,7 @@ function ThemeToggle() {
       className="theme-toggle"
       type="button"
       onClick={toggleTheme}
+      aria-pressed={theme === 'dark'}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
@@ -707,8 +708,8 @@ function MarketingHome() {
           <div className="ledger-wrap hero-layout">
             <div className="hero-copy hero-copy-ledger">
               <p className="eyebrow"><span className="status-dot-live" /> EARLY ACCESS <i /> WAITLIST OPEN</p>
-              <h1 id="home-title">Get the documents.<br />Skip the retyping.<br /><span className="hero-highlight">Keep the final say.</span></h1>
-              <p className="hero-lede">TaxFlow AI helps accounting practices collect client documents, organise files, read the details, and put the original beside the work for an accountant to review.</p>
+              <h1 id="home-title">Less busywork.<br /><span className="hero-highlight">More time to advise.</span></h1>
+              <p className="hero-lede">TaxFlow AI is designed to automate repetitive document work—from client file collection and AI-assisted data capture to review preparation—so accountants can spend less time on manual steps and keep the final say.</p>
               <div className="hero-actions-ledger">
                 <a className="btn btn-primary btn-lg" href="/waitlist">Join the waitlist <span className="arrow">→</span></a>
                 <a className="btn btn-ghost btn-lg" href="#how-it-works">See how it works</a>
