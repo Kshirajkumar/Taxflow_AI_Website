@@ -292,6 +292,59 @@ function Header({ productPage = false }: { productPage?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const prefix = productPage ? '/#' : '#';
 
+  useEffect(() => {
+    const buttons = [...document.querySelectorAll<HTMLElement>(
+      'a[href="/waitlist"].button, a[href="/waitlist"].btn, a[href="/waitlist"].nav-cta, button.form-submit'
+    )];
+    if (!buttons.length) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    buttons.forEach((button) => button.classList.add('waitlist-magnetic'));
+
+    const resetButtons = () => buttons.forEach((button) => {
+      button.style.translate = '0 0';
+    });
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse' || reducedMotion.matches) return;
+
+      buttons.forEach((button) => {
+        const bounds = button.getBoundingClientRect();
+        const offsetX = event.clientX - (bounds.left + bounds.width / 2);
+        const offsetY = event.clientY - (bounds.top + bounds.height / 2);
+        const distance = Math.hypot(offsetX, offsetY);
+        const radius = 132;
+
+        if (distance >= radius) {
+          button.style.translate = '0 0';
+          return;
+        }
+
+        const strength = (1 - distance / radius) * 0.12;
+        button.style.translate = `${Math.max(-9, Math.min(9, offsetX * strength))}px ${Math.max(-7, Math.min(7, offsetY * strength))}px`;
+      });
+    };
+    const onMotionPreferenceChange = () => {
+      if (reducedMotion.matches) resetButtons();
+    };
+    const onWindowPointerOut = (event: PointerEvent) => {
+      if (!event.relatedTarget) resetButtons();
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerout', onWindowPointerOut);
+    reducedMotion.addEventListener('change', onMotionPreferenceChange);
+
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerout', onWindowPointerOut);
+      reducedMotion.removeEventListener('change', onMotionPreferenceChange);
+      buttons.forEach((button) => {
+        button.classList.remove('waitlist-magnetic');
+        button.style.removeProperty('translate');
+      });
+    };
+  }, []);
+
   return (
     <header className="site-header">
       <a href="/" className="wordmark" aria-label="Taxflow home">
@@ -1232,10 +1285,9 @@ function MarketingHome() {
               <details><summary>What does joining the waitlist do?</summary><p>It records the details you choose to provide and your consent so TaxFlow can contact you about early access. Joining is free and does not guarantee beta access.</p></details>
               <details><summary>Is TaxFlow AI independently security certified?</summary><p>No independent security certification is claimed here. Do not upload client documents to this marketing site; verify the product’s security and data-handling arrangements before using it with actual client data.</p></details>
             </div>
+            <div className="mobile-sticky-cta"><a className="btn btn-primary" href="/waitlist">Join the waitlist <span className="arrow">→</span></a></div>
           </div>
         </section>
-
-        <div className="mobile-sticky-cta"><a className="btn btn-primary" href="/waitlist">Join the waitlist <span className="arrow">→</span></a></div>
       </main>
       <Footer />
     </>
