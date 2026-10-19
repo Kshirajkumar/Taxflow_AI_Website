@@ -294,12 +294,24 @@ function ScrollJourney() {
         const current = anchors[index];
         const next = anchors[index + 1];
         const contentEnd = measureSectionEnd(sections[index]);
-        const crossY = next.y > contentEnd
-          ? (contentEnd + next.y) / 2
-          : (current.y + next.y) / 2;
-        const direction = index % 2 === 0 ? 1 : -1;
-        const bend = Math.min(18, Math.max(7, Math.abs(next.x - current.x) * 0.012)) * direction;
-        const d = `L ${current.x} ${crossY} C ${current.x} ${crossY + bend} ${next.x} ${crossY - bend} ${next.x} ${crossY} L ${next.x} ${next.y}`;
+        const gap = next.y - contentEnd;
+        const hasClearGap = gap > 36;
+        const startY = hasClearGap ? contentEnd : current.y + (next.y - current.y) * 0.58;
+        const endY = hasClearGap ? next.y : current.y + (next.y - current.y) * 0.82;
+        const gapHeight = Math.max(1, endY - startY);
+        const startLead = Math.max(1, startY - current.y);
+        const endLead = Math.max(1, next.y - endY);
+        const leftRail = current.x < width / 2;
+        const currentSweep = (leftRail ? -1 : 1) * Math.min(9, width * 0.012);
+        const nextSweep = (next.x < width / 2 ? -1 : 1) * Math.min(9, width * 0.012);
+        const d = [
+          `C ${current.x + currentSweep} ${current.y + startLead * 0.28}`,
+          `${current.x + currentSweep} ${startY - startLead * 0.2} ${current.x} ${startY}`,
+          `C ${current.x} ${startY + gapHeight * 0.2}`,
+          `${next.x} ${endY - gapHeight * 0.2} ${next.x} ${endY}`,
+          `C ${next.x + nextSweep} ${endY + endLead * 0.2}`,
+          `${next.x + nextSweep} ${next.y - endLead * 0.28} ${next.x} ${next.y}`
+        ].join(' ');
         temporaryPath.setAttribute('d', `M ${current.x} ${current.y} ${d}`);
         segments.push({ d, length: temporaryPath.getTotalLength() });
       }
@@ -323,12 +335,23 @@ function ScrollJourney() {
       progress.setAttribute('stroke-dasharray', `${routeLength} ${routeLength}`);
       while (nodes.firstChild) nodes.removeChild(nodes.firstChild);
       anchors.forEach((anchor) => {
+        const stop = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        stop.setAttribute('class', `scroll-journey-stop${anchor.isFinal ? ' is-final' : ''}`);
+        stop.setAttribute('transform', `translate(${anchor.x} ${anchor.y})`);
+
         const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        node.setAttribute('cx', String(anchor.x));
-        node.setAttribute('cy', String(anchor.y));
         node.setAttribute('r', anchor.isFinal ? '5' : '2.5');
-        node.setAttribute('class', `scroll-journey-node${anchor.isFinal ? ' is-final' : ''}`);
-        nodes.appendChild(node);
+        node.setAttribute('class', 'scroll-journey-node');
+        stop.appendChild(node);
+
+        if (!anchor.isFinal) {
+          const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          arrow.setAttribute('d', anchor.x < width / 2 ? 'M 3 -5 L 8 0 L 3 5' : 'M -3 -5 L -8 0 L -3 5');
+          arrow.setAttribute('class', `scroll-journey-stop-arrow ${anchor.x < width / 2 ? 'inward-right' : 'inward-left'}`);
+          stop.appendChild(arrow);
+        }
+
+        nodes.appendChild(stop);
       });
 
       updatePosition();
@@ -340,7 +363,7 @@ function ScrollJourney() {
 
       const scrollY = window.scrollY;
       let index = 0;
-      while (index < milestones.length - 1 && scrollY > milestones[index + 1].scroll) index += 1;
+      while (index < milestones.length - 1 && scrollY >= milestones[index + 1].scroll) index += 1;
       const start = milestones[index];
       const end = milestones[Math.min(index + 1, milestones.length - 1)];
       const segmentProgress = end.scroll <= start.scroll
@@ -350,6 +373,11 @@ function ScrollJourney() {
         ? routeLength
         : start.length + (end.length - start.length) * segmentProgress;
       const point = track!.getPointAtLength(Math.min(routeLength, distance));
+      const activeIndex = reducedMotion.matches ? milestones.length - 1 : index;
+      [...nodes!.children].forEach((stop, stopIndex) => {
+        stop.classList.toggle('is-active', stopIndex === activeIndex);
+        stop.classList.toggle('is-complete', stopIndex < activeIndex);
+      });
 
       progress!.setAttribute('stroke-dashoffset', String(routeLength - distance));
       marker!.setAttribute('transform', `translate(${point.x} ${point.y})`);
@@ -710,7 +738,7 @@ function Footer({ productPage = false }: { productPage?: boolean }) {
     };
   }, []);
 
-  const wordmark = 'Taxflow';
+  const wordmark = 'TaxFlow';
 
   return (
     <footer className="site-footer">
@@ -725,11 +753,13 @@ function Footer({ productPage = false }: { productPage?: boolean }) {
       <div className="footer-group"><h3>Trust</h3><a href={productPage ? '/#security' : '#security'}>Security</a><a href={productPage ? '/#faq' : '#faq'}>FAQ</a><a href={productPage ? '/#status' : '#status'}>Product status</a></div>
       <div className="footer-group"><h3>Legal</h3><a href="/privacy">Privacy notice</a><a href="/terms">Terms of use</a></div>
       <div className="footer-wordmark-section" ref={wordmarkRef}>
-        <div className="footer-wordmark" role="img" aria-label={wordmark}>
-          <span aria-hidden="true">{[...wordmark].map((letter, index) => {
-            const letterProgress = Math.max(0, Math.min(1, typingProgress * wordmark.length - index));
+        <div className="footer-wordmark" role="img" aria-label="TaxFlow AI">
+          <span className="footer-wordmark-brand" aria-hidden="true" style={{ opacity: Math.min(1, typingProgress * 9), transform: `translateY(${(1 - Math.min(1, typingProgress * 9)) * 0.08}em)` }}><BrandGlyph size={80} /></span>
+          <span className="footer-wordmark-name" aria-hidden="true">{[...wordmark].map((letter, index) => {
+            const letterProgress = Math.max(0, Math.min(1, typingProgress * 9 - index - 1));
             return <span className="footer-wordmark-letter" key={`${letter}-${index}`} style={{ opacity: letterProgress, transform: `translateY(${(1 - letterProgress) * 0.08}em)` }}>{letter}</span>;
           })}</span>
+          <span className="footer-wordmark-ai" aria-hidden="true" style={{ opacity: Math.max(0, Math.min(1, typingProgress * 9 - wordmark.length - 1)) }}>AI</span>
         </div>
       </div>
       <div className="footer-bottom"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><span>© {new Date().getFullYear()} TaxFlow AI</span><span>Names, files, and figures shown here are illustrative.</span></div>
