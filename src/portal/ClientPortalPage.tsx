@@ -178,7 +178,7 @@ export function ClientPortalPage() {
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
         options: {
-          shouldCreateUser: false,
+          shouldCreateUser: true,
           emailRedirectTo: `${window.location.origin}/portal`,
         },
       });
