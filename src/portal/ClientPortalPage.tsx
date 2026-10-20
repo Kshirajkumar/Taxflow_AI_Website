@@ -86,19 +86,46 @@ async function getPortalData(token: string): Promise<PortalData> {
 }
 
 export function ClientPortalPage() {
+  const [inviteToken, setInviteToken] = useState<string | null>(() => {
+    const match = window.location.hash.match(/(?:^#|&)invite=([A-Za-z0-9_-]{40,64})(?:&|$)/);
+    return match?.[1] || null;
+  });
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = window.localStorage.getItem('taxflow-portal-theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch {
+      // Use the browser preference when storage is unavailable.
+    }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
   const [session, setSession] = useState<Session | null>(null);
   const [portal, setPortal] = useState<PortalData | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [email, setEmail] = useState('');
-  const [sendingLink, setSendingLink] = useState(false);
-  const [linkSent, setLinkSent] = useState(false);
+  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<'register' | 'signin'>('register');
+  const [authenticating, setAuthenticating] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
+  const authFlowInProgress = useRef(false);
+
+  useEffect(() => {
+    if (window.location.hash.includes('invite=')) {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    }
+    document.documentElement.style.colorScheme = theme;
+    try {
+      window.localStorage.setItem('taxflow-portal-theme', theme);
+    } catch {
+      // Theme selection remains active for this page even if storage is unavailable.
+    }
+  }, [theme]);
 
   useEffect(() => {
     document.title = 'Secure client portal — Taxflow.AI';
@@ -137,6 +164,7 @@ export function ClientPortalPage() {
       setLoadingPortal(false);
       return undefined;
     }
+    if (authFlowInProgress.current) return undefined;
     let disposed = false;
     setLoadingPortal(true);
     setError('');
@@ -168,28 +196,78 @@ export function ClientPortalPage() {
     setSelectedFile(file);
   }, []);
 
-  async function sendSignInLink(event: FormEvent<HTMLFormElement>) {
+  async function authenticatePortal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!supabase || sendingLink) return;
-    setSendingLink(true);
+    if (!supabase || authenticating) return;
+    const normalizedEmail = email.trim().toLowerCase();
+    setAuthenticating(true);
     setError('');
-    setLinkSent(false);
+    setNotice('');
+    authFlowInProgress.current = true;
+    let sessionEstablished = false;
     try {
-      const { error: signInError } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/portal`,
-        },
+      if (mode === 'register') {
+        if (!inviteToken) throw new Error('A current invitation from your CA is required to create a portal account.');
+        if (password.length < 12 || password.length > 128) {
+          throw new Error('Choose a password between 12 and 128 characters.');
+        }
+        await readResponse<{ email: string }>(await fetch(portalApiUrl('/api/v1/client-portal/invitations/validate'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: inviteToken, email: normalizedEmail }),
+        }));
+        await readResponse<{ email: string }>(await fetch(portalApiUrl('/api/v1/client-portal/invitations/register'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: inviteToken, email: normalizedEmail, password }),
+        }));
+        setInviteToken(null);
+      }
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
       });
-      if (signInError) throw signInError;
-      setLinkSent(true);
+      if (signInError || !data.session) {
+        throw signInError || new Error('Sign-in did not create a valid session. Please try again.');
+      }
+      sessionEstablished = true;
+
+      if (inviteToken && mode !== 'register') {
+        await readResponse<{ client_id: string; invited_email: string }>(await fetch(portalApiUrl('/api/v1/client-portal/invitations/claim'), {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${data.session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token: inviteToken }),
+        }));
+      }
+
+      const portalData = await getPortalData(data.session.access_token);
+      setSession(data.session);
+      setPortal(portalData);
+      setInviteToken(null);
+      setPassword('');
+      setNotice(mode === 'register' ? 'Your secure portal account is ready.' : '');
+      setError('');
     } catch (requestError) {
+      if (supabase && sessionEstablished) {
+        try {
+          const { error: signOutError } = await supabase.auth.signOut();
+          if (signOutError) console.error('[Client Portal] Could not clear an unverified sign-in session:', signOutError.message);
+        } catch (signOutError) {
+          console.error('[Client Portal] Could not clear an unverified sign-in session:', signOutError);
+        }
+        setSession(null);
+      }
+      setPortal(null);
       setError(requestError instanceof Error
         ? requestError.message
-        : 'A sign-in link could not be sent. Check the email address and try again.');
+        : 'We could not verify your account. Check your email and password, then try again.');
     } finally {
-      setSendingLink(false);
+      authFlowInProgress.current = false;
+      setAuthenticating(false);
     }
   }
 
@@ -251,7 +329,7 @@ export function ClientPortalPage() {
   }
 
   return (
-    <main className="client-portal">
+    <main className="client-portal" data-theme={theme}>
       <div className="portal-background-glow portal-background-glow-one" />
       <div className="portal-background-glow portal-background-glow-two" />
       <header className="portal-header">
@@ -261,6 +339,16 @@ export function ClientPortalPage() {
         </a>
         <div className="portal-header-right">
           <span className="portal-secure-label"><PortalIcon name="lock" size={14} /> PRIVATE CLIENT PORTAL</span>
+          <button
+            type="button"
+            className="portal-theme-toggle"
+            onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-pressed={theme === 'dark'}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
           {portal && <button type="button" className="portal-signout" onClick={() => void signOut()}><PortalIcon name="logout" size={15} /> Sign out</button>}
         </div>
       </header>
@@ -271,7 +359,8 @@ export function ClientPortalPage() {
             <span className="portal-state-icon"><PortalIcon name="shield" size={24} /></span>
             <span className="portal-eyebrow">PORTAL SETUP</span>
             <h1>Secure sign-in is not available</h1>
-            <p>{error || 'Please contact your practice for help.'}</p>
+            <p>{error || 'This portal is temporarily unavailable. Please contact your tax practice for help.'}</p>
+            <p className="portal-setup-help">Site administrator: configure the public Supabase project URL and publishable key, plus the backend API URL, in the website hosting environment and redeploy. Never add a service-role key to the website.</p>
           </div>
         ) : !authReady || loadingPortal ? (
           <div className="portal-state-card portal-loading-card" role="status">
@@ -367,37 +456,56 @@ export function ClientPortalPage() {
             <section className="portal-login-copy">
               <span className="portal-eyebrow"><i /> A BETTER WAY TO SHARE DOCUMENTS</span>
               <h1>Your documents,<br /><em>delivered privately.</em></h1>
-              <p>Sign in to your Taxflow client portal to send files directly to your practice—without attaching them to a chat.</p>
+              <p>Open the private invitation link from your CA, then sign in here to access your authorized document upload and file-transfer service. Keep sensitive files out of Telegram and chat messages.</p>
               <div className="portal-trust-list">
                 <div><span><PortalIcon name="shield" size={16} /></span><div><b>Private by design</b><small>Your files are available only to your authorized practice.</small></div></div>
                 <div><span><PortalIcon name="upload" size={16} /></span><div><b>Simple, secure uploads</b><small>Send supported tax documents from your phone or computer.</small></div></div>
-                <div><span><PortalIcon name="lock" size={16} /></span><div><b>Sign in with a secure link</b><small>No password to remember. We’ll email a one-time sign-in link.</small></div></div>
+                <div><span><PortalIcon name="lock" size={16} /></span><div><b>Access is invitation-only</b><small>Your CA gives you a private link and your portal account is matched to their client record.</small></div></div>
               </div>
               <p className="portal-chat-note">Telegram remains available for ordinary messages. Please use this portal for files.</p>
             </section>
 
             <section className="portal-login-card">
               <span className="portal-login-card-mark"><PortalIcon name="lock" size={19} /></span>
-              <span className="portal-eyebrow">CLIENT ACCESS</span>
-              <h2>Sign in to your portal</h2>
-              <p>Use the email address your tax practice has on file. We’ll send you a secure sign-in link.</p>
+              <span className="portal-eyebrow">{inviteToken ? 'PRIVATE CLIENT INVITATION' : 'CLIENT ACCESS'}</span>
+              <h2>{mode === 'register' ? 'Create your portal account' : 'Sign in to your portal'}</h2>
+              <p>{mode === 'register'
+                ? 'Use the exact email address your tax practice has on file. Choose a strong password for future visits.'
+                : 'Use the email address and password you set up for your client portal.'}</p>
               {error && <div className="portal-feedback portal-feedback-error" role="alert">{error}</div>}
-              {linkSent ? (
-                <div className="portal-link-sent" role="status">
-                  <span><PortalIcon name="check" size={19} /></span>
-                  <b>Check your inbox</b>
-                  <p>If this email has portal access, a secure sign-in link is on its way. The link expires for your protection.</p>
-                  <button type="button" onClick={() => setLinkSent(false)}>Use a different email</button>
+              {!inviteToken && mode === 'register' ? (
+                <div className="portal-invitation-required" role="status">
+                  <span><PortalIcon name="shield" size={19} /></span>
+                  <b>A private link from your CA is required</b>
+                  <p>Open the private, one-time link your CA shared to create your account. Use the same email address your CA has on file; the invitation is matched to that client record. Already enrolled? Sign in instead.</p>
+                  <button type="button" onClick={() => { setMode('signin'); setError(''); }}>Already have an account? Sign in</button>
                 </div>
               ) : (
-                <form onSubmit={(event) => void sendSignInLink(event)}>
+                <form onSubmit={(event) => void authenticatePortal(event)}>
                   <label htmlFor="portal-email">Email address</label>
                   <input id="portal-email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.currentTarget.value)} placeholder="you@example.com" />
-                  <button type="submit" className="portal-upload-button" disabled={sendingLink}>
-                    {sendingLink ? <><span className="portal-button-spinner" /> Sending secure link…</> : <>Email me a sign-in link <PortalIcon name="arrow" size={16} /></>}
+                  <label htmlFor="portal-password">Password</label>
+                  <input
+                    id="portal-password"
+                    type="password"
+                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                    required
+                    minLength={mode === 'register' ? 12 : 1}
+                    maxLength={128}
+                    value={password}
+                    onChange={(event) => setPassword(event.currentTarget.value)}
+                    placeholder={mode === 'register' ? 'At least 12 characters' : 'Your portal password'}
+                  />
+                  <button type="submit" className="portal-upload-button" disabled={authenticating || (mode === 'register' && !inviteToken)}>
+                    {authenticating
+                      ? <><span className="portal-button-spinner" /> {mode === 'register' ? 'Creating secure account…' : 'Signing in securely…'}</>
+                      : <>{mode === 'register' ? 'Create secure account' : 'Sign in securely'} <PortalIcon name="arrow" size={16} /></>}
                   </button>
                 </form>
               )}
+              {inviteToken && <button type="button" className="portal-mode-switch" onClick={() => { setMode((current) => current === 'register' ? 'signin' : 'register'); setError(''); }}>
+                {mode === 'register' ? 'Already enrolled? Sign in' : 'First time here? Create your account'}
+              </button>}
               <div className="portal-login-foot"><PortalIcon name="shield" size={14} /><span>Access is limited to invited client accounts.</span></div>
             </section>
           </div>

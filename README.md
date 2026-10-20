@@ -36,13 +36,13 @@ The website uses the same Supabase project as the TaxFlow app. The marketing wai
 
 ## Configure the client portal
 
-1. Follow the root [`BACKEND_GUIDE.md`](../BACKEND_GUIDE.md) client-portal deployment steps. Apply `services/backend/db/client_portal.sql` after the base schema and private storage-bucket migration, and make sure `services/backend/db/create_api_rate_limits.sql` has been applied.
+1. Follow the root [`BACKEND_GUIDE.md`](../BACKEND_GUIDE.md) client-portal deployment steps. Apply `services/backend/db/client_portal.sql` and `services/backend/db/client_portal_invites.sql` after the base schema and private storage-bucket migration, and make sure `services/backend/db/create_api_rate_limits.sql` has been applied.
 2. On the backend, set `CLIENT_PORTAL_URL` to the exact website origin (HTTPS in production) and set `SUPABASE_STORAGE_BUCKET` to the private intake bucket. The backend must use the service-role key; never copy it into this website.
-3. On the website, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` to the existing project's public values, and set `API_URL` to the backend origin. The public Supabase key is used only for email-link sign-in; all access checks and uploads are performed by the backend.
-4. In Supabase Auth, configure email delivery and allowlist the website's `/portal` URL as an email redirect. Invite a client from the desktop app after verifying their email address in the client record.
+3. On the website, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` to the existing project's public values, and set `API_URL` to the backend origin. The public Supabase key is used for password sign-in; all invitation validation, account creation, access checks, and uploads are performed by the backend.
+4. No Supabase Auth email provider or email redirect is required for portal enrollment. Create a portal invitation from the desktop app or create a Telegram account-link invitation; send the private link only to the client whose email is recorded on that client record.
 5. Verify the bucket is private and test an invitation, a small supported file upload, desktop sync, access revocation, and rejection of an oversized or unsupported file before production use.
 
-Portal uploads are stored in private Supabase Storage and copied by the existing desktop sync into the configured local vault. Hosting, API, and storage providers process data to operate the service. The portal uses HTTPS in production and does not send uploaded files through Telegram. This setup is not an independent security audit or a guarantee against all security incidents.
+Portal invitation links are one-time, expire after 30 days, and are stored in the database only as token hashes. The link token is placed in the URL fragment and removed from browser history before it is sent to the backend. Clients create accounts only when an invitation and the exact client email match; returning clients use their password. Portal uploads are stored in private Supabase Storage and copied by the existing desktop sync into the configured local vault. Hosting, API, and storage providers process data to operate the service. The portal uses HTTPS in production and does not send uploaded files through Telegram. This setup is not an independent security audit or a guarantee against all security incidents.
 
 For Vercel, use the names `SUPABASE_URL` and `SUPABASE_ANON_KEY` without the `VITE_` prefix, and set their type to **Config** when asked. Vite's build configuration explicitly passes only these two named public values to the browser; it does not expose other `SUPABASE_*` variables. The Supabase URL and Publishable/legacy anon key are public browser configuration—not secrets—so they will be present in the deployed JavaScript. Never use a Supabase secret key (`sb_secret_...`) or `SUPABASE_SERVICE_ROLE_KEY` here. Remove any old `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` entries from Vercel after adding the replacement variables.
 
@@ -60,11 +60,11 @@ Import this website repository into Vercel and configure:
 - **Root directory:** `./` (the repository root)
 - **Build command:** `npm run build`
 - **Output directory:** `dist`
-- **Environment variables:** `SUPABASE_URL` and `SUPABASE_ANON_KEY`, using the same existing Supabase project values as local development. Set them as **Config** values, and add them for each Vercel environment you use.
+- **Environment variables:** `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `API_URL`. Use the same existing Supabase project URL and Publishable/legacy anon key as local development, and set `API_URL` to the deployed TaxFlow backend origin (for example, `https://taxflow-ai.onrender.com`). Add them for every Vercel environment you deploy (Production, Preview, and Development as applicable), then redeploy.
 
-These are public browser configuration values, not secrets. Vite explicitly embeds only these two named variables in the site; other Supabase environment values such as a service-role key are not passed through. Use only the Supabase Project URL and Publishable key (or legacy anon key). Delete any previous `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` entries, then redeploy after adding or changing the new Config variables.
+The Supabase URL and Publishable/legacy anon key are public browser configuration values, not secrets. Vite explicitly embeds only these named values in the site; other Supabase environment values such as a service-role key are not passed through. Never set `SUPABASE_SERVICE_ROLE_KEY` or a Supabase secret key in the website project. If `/portal` displays “Secure sign-in is not available,” the site was built without valid `SUPABASE_URL` or `SUPABASE_ANON_KEY`; correct the Vercel variables and redeploy because source changes cannot supply those project-specific values. Delete any previous `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` entries.
 
-The Vercel configuration rewrites the `/product`, `/waitlist`, `/get-app`, `/workflow-comparison`, `/portal`, `/privacy`, and `/terms` application routes to the Vite entry point. Other unknown paths use the branded `public/404.html` page. Add the production `/portal` URL to Supabase Auth's redirect allowlist when using the client portal.
+The Vercel configuration rewrites the `/product`, `/waitlist`, `/get-app`, `/workflow-comparison`, `/portal`, `/privacy`, and `/terms` application routes to the Vite entry point. Other unknown paths use the branded `public/404.html` page.
 
 ## Build
 
