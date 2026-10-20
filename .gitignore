@@ -6,3 +6,8 @@ dist/
 !.env.example
 .DS_Store
 Thumbs.db
+
+# Separate repositories — do not push into this repo
+../services/backend/
+../apps/desktop/
+../Render Free Tier Telegram Bot Setup/

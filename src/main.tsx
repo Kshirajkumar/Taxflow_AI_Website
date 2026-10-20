@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
+import { ClientPortalPage } from './portal/ClientPortalPage';
 import './styles.css';
 
 type IconName =
@@ -369,6 +370,7 @@ function Header({ productPage = false }: { productPage?: boolean }) {
         <a className="nav-product" href="/product" onClick={() => setMenuOpen(false)}>Product details</a>
         <a className="nav-comparison" href="/workflow-comparison" onClick={() => setMenuOpen(false)}>Compare workflows</a>
         <a className="nav-get-app" href="/get-app" onClick={() => setMenuOpen(false)}>Get the app</a>
+        <a className="nav-portal" href="/portal" onClick={() => setMenuOpen(false)}>Client portal</a>
         <ThemeToggle />
         <a className="nav-cta" href="/waitlist" onClick={() => setMenuOpen(false)}>
           Join the waitlist <span className="arrow" aria-hidden="true">→</span>
@@ -1098,7 +1100,7 @@ function WorkflowTabs() {
 }
 
 const demoFeatures = [
-  { icon: 'message' as const, title: 'Client chat connection', status: 'In testing', description: 'Link each client to the firm’s bot. Telegram intake is available in the current integration; WhatsApp availability depends on setup and rollout.' },
+  { icon: 'message' as const, title: 'Client chat connection', status: 'In testing', description: 'Telegram supports ordinary chat; file sharing is directed to the secure client portal. WhatsApp availability depends on setup and rollout.' },
   { icon: 'calendar' as const, title: 'Scheduled document reminders', status: 'In testing', description: 'Set a schedule for document requests so teams can reduce repetitive follow-ups.' },
   { icon: 'folder' as const, title: 'Client document organisation', status: 'In testing', description: 'Organise incoming client files around a client, year, and month, keeping the source document.' },
   { icon: 'spark' as const, title: 'Invoice extraction', status: 'In testing', description: 'When enabled, AI can read supported invoices and structure dates, parties, and amounts.' },
@@ -1264,7 +1266,7 @@ function MarketingHome() {
           <div className="ledger-wrap">
             <div className="section-intro" data-reveal><span className="eyebrow">PRODUCT STATUS · 19 OCTOBER 2026</span><h2>Where TaxFlow AI is today.</h2><p className="lede">A working demo in internal testing, moving toward security and quality checks before a private beta.</p></div>
             <div className="status-columns">
-              <article className="status-column status-column-live" data-reveal><span className="status-pill status-current">IN INTERNAL TESTING</span><h3>Available in the current demo</h3><ul><li>Telegram client connection and document intake</li><li>Scheduled client document reminders</li><li>Client-folder document organisation</li><li>Optional AI invoice extraction</li><li>Side-by-side review and approval flow</li></ul></article>
+              <article className="status-column status-column-live" data-reveal><span className="status-pill status-current">IN INTERNAL TESTING</span><h3>Available in the current demo</h3><ul><li>Telegram client connection for ordinary chat</li><li>Secure client portal for file uploads</li><li>Scheduled client document reminders</li><li>Client-folder document organisation</li><li>Optional AI invoice extraction</li><li>Side-by-side review and approval flow</li></ul></article>
               <article className="status-column" data-reveal style={{ '--delay': '100ms' } as React.CSSProperties}><span className="status-pill status-principle">NEXT STEPS</span><h3>Before wider access</h3><ul><li>Security and quality checks</li><li>Private beta with accounting professionals</li><li>Fixes informed by real reviewer feedback</li><li>More complete tests and production hardening</li></ul></article>
               <article className="status-column" data-reveal style={{ '--delay': '200ms' } as React.CSSProperties}><span className="status-pill status-planned">PLANNED</span><h3>Later product direction</h3><ul><li>Deadline tracking and richer filing workflows</li><li>Form generation and validated exports</li><li>WhatsApp and additional integrations</li><li>More countries and books capabilities</li></ul></article>
             </div>
@@ -1280,10 +1282,10 @@ function MarketingHome() {
               <details><summary>Does it file returns directly with a government portal?</summary><p>No. Government filing is not live. Filing support is a future, jurisdiction-by-jurisdiction plan and depends on authorised channels and explicit human approval.</p></details>
               <details><summary>Does AI make tax decisions or calculate the return?</summary><p>The product direction separates AI-assisted document reading from tax calculations. Calculations require validated rules and review; no autonomous filing is supported.</p></details>
               <details><summary>Can I turn AI document reading off?</summary><p>AI extraction is designed to be optional in the current workflow. Check the deployed product’s settings and <a href="/privacy">privacy notice</a> before submitting real client documents.</p></details>
-              <details><summary>Which chat integrations work today?</summary><p>The current product context describes Telegram intake in internal testing. WhatsApp is not represented as a generally available feature and requires a configured integration.</p></details>
+              <details><summary>Which chat integrations work today?</summary><p>Telegram supports ordinary chat in internal testing. Document files should be uploaded through the invited client portal and are not downloaded or sent by the Telegram integration. WhatsApp is not represented as generally available and requires a configured integration.</p></details>
               <details><summary>Which countries are supported?</summary><p>India is the initial product direction. Additional jurisdictions are on the roadmap and are not a claim of current filing coverage.</p></details>
               <details><summary>What does joining the waitlist do?</summary><p>It records the details you choose to provide and your consent so TaxFlow can contact you about early access. Joining is free and does not guarantee beta access.</p></details>
-              <details><summary>Is TaxFlow AI independently security certified?</summary><p>No independent security certification is claimed here. Do not upload client documents to this marketing site; verify the product’s security and data-handling arrangements before using it with actual client data.</p></details>
+              <details><summary>Is TaxFlow AI independently security certified?</summary><p>No independent security certification is claimed here. Do not upload client documents to marketing or waitlist pages; use the separate client portal only when invited, and verify its data-handling arrangements with your practice.</p></details>
             </div>
             <div className="mobile-sticky-cta"><a className="btn btn-primary" href="/waitlist">Join the waitlist <span className="arrow">→</span></a></div>
           </div>
@@ -1579,11 +1581,11 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
     ? [
       {
         title: 'Information you provide',
-        paragraphs: ['The waitlist asks for your email address and consent to receive early-access updates. You may also choose to share your name, firm, role, country, and firm size. Please do not submit client records, tax documents, passwords, or other sensitive information.']
+        paragraphs: ['The waitlist asks for your email address and consent to receive early-access updates. You may also choose to share your name, firm, role, country, and firm size. Do not submit client records or tax documents through the marketing pages or waitlist. Invited clients may submit supported documents only through the separate /portal workflow.']
       },
       {
         title: 'How we use it',
-        paragraphs: ['We use waitlist details to administer early access, understand interest in TaxFlow AI, and send the updates you agreed to receive. We do not sell waitlist details or use them for advertising.']
+        paragraphs: ['We use waitlist details to administer early access, understand interest in TaxFlow AI, and send the updates you agreed to receive. For the client portal, the backend associates uploaded documents with the invited client and makes them available to that client’s authorized practice account and desktop sync. We do not sell waitlist or portal information or use it for advertising.']
       },
       {
         title: 'Where a submission goes',
@@ -1591,21 +1593,21 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
       },
       {
         title: 'Service providers and storage',
-        paragraphs: ['The website host and any configured waitlist provider process information needed to deliver the site and store submissions. Those services may process technical information under their own terms. Waitlist records are accessible to authorised administrators; the public website cannot read them.']
+        paragraphs: ['The website host and any configured waitlist provider process information needed to deliver the site and store submissions. Client-portal files are transmitted to the Taxflow backend and stored in a private Supabase Storage bucket; they are then available to the authorized practice and may be copied to its configured desktop vault. Hosting, API, authentication, and storage providers process information to operate these services under their own terms. The browser does not receive the backend service-role key or direct access to private file storage.']
       },
       {
         title: 'Your choices and deletion',
-        paragraphs: ['You can choose not to join, and you can stop receiving updates by following the instructions in an email from TaxFlow AI. To ask for a waitlist record to be removed, reply to an early-access email you received from us. A fixed deletion schedule has not yet been published.']
+        paragraphs: ['You can choose not to join, and you can stop receiving updates by following the instructions in an email from TaxFlow AI. To ask for a waitlist record to be removed, reply to an early-access email you received from us. For portal access or document-retention requests, contact the practice that invited you; revoking portal access prevents future portal requests but does not itself delete files already received or copies saved by the practice. A fixed deletion schedule has not yet been published.']
       },
       {
         title: 'Changes and questions',
-        paragraphs: ['We may update this notice as the website and waitlist change. The date above identifies the latest revision. Do not use the marketing website to share real client data; product security and data-handling arrangements should be verified before any client information is used with a future product.']
+        paragraphs: ['We may update this notice as the website, waitlist, and portal change. The date above identifies the latest revision. Use the portal only when invited by your practice and only for information you are authorized to provide.']
       }
     ]
     : [
       {
         title: 'About this website',
-        paragraphs: ['These terms cover your use of the TaxFlow AI marketing website and its early-access waitlist. TaxFlow AI is in development; website descriptions, previews, and product plans are informational and may change.']
+        paragraphs: ['These terms cover your use of the TaxFlow AI marketing website, early-access waitlist, and client portal. Portal access is available only to clients invited by a practice. TaxFlow AI is in development; website descriptions, previews, and product plans are informational and may change.']
       },
       {
         title: 'The waitlist is not product access',
@@ -1613,11 +1615,11 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
       },
       {
         title: 'Use the site responsibly',
-        paragraphs: ['Use the website lawfully and do not attempt to disrupt it, access systems without permission, submit malicious content, or use the waitlist to provide information you are not authorised to share.']
+        paragraphs: ['Use the website lawfully and do not attempt to disrupt it, access systems without permission, submit malicious content, or use the waitlist to provide information you are not authorised to share. Portal users may upload only supported files they are authorized to provide to the inviting practice; portal access may be revoked by that practice.']
       },
       {
         title: 'Not professional advice',
-        paragraphs: ['Website content and illustrative product examples are not tax, accounting, legal, or other professional advice. A qualified professional must independently review work before relying on it. Do not upload client tax records or credentials to this marketing site.']
+        paragraphs: ['Website content and illustrative product examples are not tax, accounting, legal, or other professional advice. A qualified professional must independently review work before relying on it. Do not upload client tax records or credentials to marketing or waitlist forms; use the separate client portal only when invited by your practice.']
       },
       {
         title: 'Product descriptions and third-party services',
@@ -1655,7 +1657,7 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
               </div>
             </article>
           ))}
-          <p className="legal-disclaimer"><Icon name="info" size={15} /> This page describes the website and waitlist—not the data practices of a future TaxFlow product. Review the deployed product’s applicable documentation before using it with client information.</p>
+          <p className="legal-disclaimer"><Icon name="info" size={15} /> Client portal files are sent to the Taxflow backend and stored in private Supabase Storage for access by the authorized practice. Hosting, API, and storage providers process information to operate the service. This summary is not a substitute for the applicable product terms or legal advice.</p>
         </section>
       </main>
       <Footer productPage />
@@ -1667,6 +1669,7 @@ function App() {
   useEffect(() => {
     const path = window.location.pathname;
     const titles: Record<string, string> = {
+      '/portal': 'Secure client portal — Taxflow.AI',
       '/product': 'Product details — Taxflow.AI',
       '/waitlist': 'Join the waitlist — Taxflow.AI',
       '/get-app': 'Get the TaxFlow app — Coming soon',
@@ -1678,6 +1681,7 @@ function App() {
   }, []);
 
   const path = window.location.pathname;
+  if (path === '/portal') return <ClientPortalPage />;
   if (path === '/waitlist') return <WaitlistPage />;
   if (path === '/get-app') return <GetAppPage />;
   if (path === '/workflow-comparison') return <WorkflowComparisonPage />;
@@ -1689,5 +1693,5 @@ function App() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><><CursorDotField /><App /></></React.StrictMode>
+  <React.StrictMode><>{window.location.pathname === '/portal' ? null : <CursorDotField />}<App /></></React.StrictMode>
 );
