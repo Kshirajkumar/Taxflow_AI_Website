@@ -197,7 +197,10 @@ export function ClientPortalPage() {
     setCheckingInviteStatus(true);
     void (async () => {
       try {
-        const { alreadyClaimed } = await readResponse<{ alreadyClaimed: boolean }>(await fetch(
+        const { alreadyClaimed, clientEmailChanged } = await readResponse<{
+          alreadyClaimed: boolean;
+          clientEmailChanged: boolean;
+        }>(await fetch(
           portalApiUrl('/api/v1/client-portal/invitations/status'),
           {
             method: 'POST',
@@ -205,10 +208,17 @@ export function ClientPortalPage() {
             body: JSON.stringify({ token: inviteToken }),
           },
         ));
-        if (disposed || !alreadyClaimed) return;
-        setMode('signin');
+        if (disposed) return;
+        if (alreadyClaimed) {
+          setMode('signin');
+          setInviteToken(null);
+          setInviteAlreadyClaimed(true);
+          removeInviteFromUrl();
+          return;
+        }
+        if (!clientEmailChanged) return;
         setInviteToken(null);
-        setInviteAlreadyClaimed(true);
+        setInviteStatusNotice('Your CA changed the email address on this client record, so this invitation is no longer valid. Ask your CA to create and send a fresh invitation to the updated email address.');
         removeInviteFromUrl();
       } catch (requestError: unknown) {
         if (disposed) return;
