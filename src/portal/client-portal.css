@@ -110,6 +110,7 @@
 .portal-feedback { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; padding: 10px 11px; border: 1px solid; border-radius: 8px; font-size: 10px; line-height: 1.55; }
 .portal-feedback-success { border-color: #c7ead9; color: #176b4d; background: #effaf4; }
 .portal-feedback-error { border-color: #f0d2d2; color: #9a3737; background: #fff5f4; }
+.portal-feedback-warning { border-color: #ead9b6; color: #76551c; background: #fff9ec; }
 .portal-feedback svg { flex: none; }
 .portal-document-list { display: grid; max-height: 254px; overflow: auto; margin: 0; padding: 0; list-style: none; scrollbar-color: #cad3e2 transparent; scrollbar-width: thin; }
 .portal-document-list li { display: flex; min-width: 0; align-items: center; gap: 10px; padding: 12px 1px; border-top: 1px solid #edf0f5; animation: portal-row-in .3s both; }
@@ -275,6 +276,7 @@
 .client-portal[data-theme="dark"] .portal-privacy-note { color: #9aa9c3; }
 .client-portal[data-theme="dark"] .portal-feedback-success { border-color: #235541; color: #8be0b7; background: #102820; }
 .client-portal[data-theme="dark"] .portal-feedback-error { border-color: #63383d; color: #ffb6b8; background: #301b22; }
+.client-portal[data-theme="dark"] .portal-feedback-warning { border-color: #5b4a2b; color: #f0d69b; background: #292317; }
 .client-portal[data-theme="dark"] .portal-theme-toggle { border-color: #33425f; color: #c5d0e5; background: #111b31; }
 .client-portal[data-theme="dark"] .portal-login-foot,
 .client-portal[data-theme="dark"] .portal-chat-note { border-color: rgba(166, 180, 211, .16); }

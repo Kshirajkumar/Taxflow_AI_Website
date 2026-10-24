@@ -140,6 +140,7 @@ export function ClientPortalPage() {
   const [mode, setMode] = useState<'register' | 'signin'>(registrationHandoffEmail ? 'signin' : 'register');
   const [registrationSuccessEmail, setRegistrationSuccessEmail] = useState<string | null>(null);
   const [inviteAlreadyClaimed, setInviteAlreadyClaimed] = useState(false);
+  const [inviteStatusNotice, setInviteStatusNotice] = useState('');
   const [authenticating, setAuthenticating] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -210,11 +211,10 @@ export function ClientPortalPage() {
         setInviteAlreadyClaimed(true);
         removeInviteFromUrl();
       } catch (requestError: unknown) {
-        if (!disposed) {
-          setError(requestError instanceof Error
-            ? requestError.message
-            : 'The invitation status could not be checked. Please try again shortly.');
-        }
+        if (disposed) return;
+        setInviteStatusNotice(requestError instanceof PortalRequestError && requestError.status === 404
+          ? 'We couldn’t automatically check whether this invitation has already been used. You can still continue; if you already created your account, choose “Already enrolled? Sign in.”'
+          : 'We couldn’t verify the invitation status right now. You can still try creating your account, or sign in if you have already registered.');
       } finally {
         if (!disposed) setCheckingInviteStatus(false);
       }
@@ -297,6 +297,7 @@ export function ClientPortalPage() {
     const normalizedEmail = email.trim().toLowerCase();
     setAuthenticating(true);
     setError('');
+    setInviteStatusNotice('');
     setNotice('');
     authFlowInProgress.current = true;
     let sessionEstablished = false;
@@ -374,9 +375,17 @@ export function ClientPortalPage() {
         removeInviteFromUrl();
         setError('');
       } else {
-        setError(requestError instanceof Error
-          ? requestError.message
-          : 'We could not verify your account. Check your email and password, then try again.');
+        const invalidInvitation = mode === 'register'
+          && requestError instanceof PortalRequestError
+          && requestError.status === 400
+          && /invitation is invalid or expired/i.test(requestError.message);
+        setError(invalidInvitation
+          ? 'We couldn’t use this invitation. It may have expired, already been used, or the email may not match your CA’s record. Check the exact email or ask your CA for a fresh link. If you already registered, choose “Already enrolled? Sign in.”'
+          : requestError instanceof TypeError
+            ? 'We couldn’t reach the portal service. Check your internet connection and try again. If the problem continues, contact your tax practice.'
+            : requestError instanceof Error
+              ? requestError.message
+              : 'We could not verify your account. Check your email and password, then try again.');
       }
     } finally {
       authFlowInProgress.current = false;
@@ -613,6 +622,12 @@ export function ClientPortalPage() {
                 <div className="portal-feedback portal-feedback-success portal-account-created-notice" role="status">
                   <PortalIcon name="check" size={16} />
                   <span>This invitation has already been used to create your portal account. Sign in below to access your documents.</span>
+                </div>
+              )}
+              {inviteStatusNotice && mode === 'register' && (
+                <div className="portal-feedback portal-feedback-warning" role="status">
+                  <PortalIcon name="shield" size={16} />
+                  <span>{inviteStatusNotice}</span>
                 </div>
               )}
               {error && <div className="portal-feedback portal-feedback-error" role="alert">{error}</div>}
