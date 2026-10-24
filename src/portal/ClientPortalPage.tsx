@@ -24,7 +24,33 @@ type PortalData = {
   documents: PortalDocument[];
 };
 
-type ApiResponse<T> = { success?: boolean; message?: string; data?: T };
+type ApiResponse<T> = { success?: boolean; code?: string; message?: string; data?: T };
+const PORTAL_REGISTRATION_HANDOFF_KEY = 'taxflow-portal-registration-handoff';
+
+class PortalRequestError extends Error {
+  constructor(message: string, readonly status: number, readonly code?: string) {
+    super(message);
+    this.name = 'PortalRequestError';
+  }
+}
+
+function consumeRegistrationHandoff() {
+  try {
+    const value = window.sessionStorage.getItem(PORTAL_REGISTRATION_HANDOFF_KEY);
+    window.sessionStorage.removeItem(PORTAL_REGISTRATION_HANDOFF_KEY);
+    if (!value) return null;
+    const parsed = JSON.parse(value) as { email?: unknown };
+    return typeof parsed.email === 'string' ? parsed.email.trim().toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+function removeInviteFromUrl() {
+  if (window.location.hash.includes('invite=')) {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  }
+}
 
 function portalApiUrl(path: string) {
   const url = new URL(path, `${API_ORIGIN}/`);
@@ -65,10 +91,14 @@ async function readResponse<T>(response: Response): Promise<T> {
   try {
     payload = await response.json() as ApiResponse<T>;
   } catch {
-    throw new Error(`The portal service returned an invalid response (HTTP ${response.status}).`);
+    throw new PortalRequestError(`The portal service returned an invalid response (HTTP ${response.status}).`, response.status);
   }
   if (!response.ok || !payload.success || payload.data === undefined) {
-    throw new Error(payload.message || `The request could not be completed (HTTP ${response.status}).`);
+    throw new PortalRequestError(
+      payload.message || `The request could not be completed (HTTP ${response.status}).`,
+      response.status,
+      payload.code,
+    );
   }
   return payload.data;
 }
@@ -86,10 +116,12 @@ async function getPortalData(token: string): Promise<PortalData> {
 }
 
 export function ClientPortalPage() {
+  const [registrationHandoffEmail, setRegistrationHandoffEmail] = useState(consumeRegistrationHandoff);
   const [inviteToken, setInviteToken] = useState<string | null>(() => {
     const match = window.location.hash.match(/(?:^#|&)invite=([A-Za-z0-9_-]{40,64})(?:&|$)/);
     return match?.[1] || null;
   });
+  const [checkingInviteStatus, setCheckingInviteStatus] = useState(Boolean(inviteToken));
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       const saved = window.localStorage.getItem('taxflow-portal-theme');
@@ -103,9 +135,11 @@ export function ClientPortalPage() {
   const [portal, setPortal] = useState<PortalData | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [loadingPortal, setLoadingPortal] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(registrationHandoffEmail || '');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'register' | 'signin'>('register');
+  const [mode, setMode] = useState<'register' | 'signin'>(registrationHandoffEmail ? 'signin' : 'register');
+  const [registrationSuccessEmail, setRegistrationSuccessEmail] = useState<string | null>(null);
+  const [inviteAlreadyClaimed, setInviteAlreadyClaimed] = useState(false);
   const [authenticating, setAuthenticating] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -115,10 +149,36 @@ export function ClientPortalPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const authFlowInProgress = useRef(false);
 
-  useEffect(() => {
-    if (window.location.hash.includes('invite=')) {
-      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  const continueRegistrationToSignIn = useCallback(() => {
+    if (!registrationSuccessEmail) return;
+    try {
+      window.sessionStorage.setItem(
+        PORTAL_REGISTRATION_HANDOFF_KEY,
+        JSON.stringify({ email: registrationSuccessEmail }),
+      );
+      window.location.replace(`${window.location.pathname}${window.location.search}`);
+    } catch {
+      try {
+        window.sessionStorage.removeItem(PORTAL_REGISTRATION_HANDOFF_KEY);
+      } catch {
+        // The current page can still transition to sign-in if storage is unavailable.
+      }
+      setEmail(registrationSuccessEmail);
+      setMode('signin');
+      setInviteToken(null);
+      setRegistrationHandoffEmail(registrationSuccessEmail);
+      setRegistrationSuccessEmail(null);
     }
+  }, [registrationSuccessEmail]);
+
+  useEffect(() => {
+    if (!registrationSuccessEmail) return undefined;
+    const timer = window.setTimeout(continueRegistrationToSignIn, 2600);
+    return () => window.clearTimeout(timer);
+  }, [continueRegistrationToSignIn, registrationSuccessEmail]);
+
+  useEffect(() => {
+    removeInviteFromUrl();
     document.documentElement.style.colorScheme = theme;
     try {
       window.localStorage.setItem('taxflow-portal-theme', theme);
@@ -126,6 +186,41 @@ export function ClientPortalPage() {
       // Theme selection remains active for this page even if storage is unavailable.
     }
   }, [theme]);
+
+  useEffect(() => {
+    if (!inviteToken || registrationHandoffEmail) {
+      setCheckingInviteStatus(false);
+      return undefined;
+    }
+    let disposed = false;
+    setCheckingInviteStatus(true);
+    void (async () => {
+      try {
+        const { alreadyClaimed } = await readResponse<{ alreadyClaimed: boolean }>(await fetch(
+          portalApiUrl('/api/v1/client-portal/invitations/status'),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: inviteToken }),
+          },
+        ));
+        if (disposed || !alreadyClaimed) return;
+        setMode('signin');
+        setInviteToken(null);
+        setInviteAlreadyClaimed(true);
+        removeInviteFromUrl();
+      } catch (requestError: unknown) {
+        if (!disposed) {
+          setError(requestError instanceof Error
+            ? requestError.message
+            : 'The invitation status could not be checked. Please try again shortly.');
+        }
+      } finally {
+        if (!disposed) setCheckingInviteStatus(false);
+      }
+    })();
+    return () => { disposed = true; };
+  }, [inviteToken, registrationHandoffEmail]);
 
   useEffect(() => {
     document.title = 'Secure client portal — Taxflow.AI';
@@ -221,7 +316,12 @@ export function ClientPortalPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: inviteToken, email: normalizedEmail, password }),
         }));
+        setPassword('');
         setInviteToken(null);
+        removeInviteFromUrl();
+        setRegistrationSuccessEmail(normalizedEmail);
+        setError('');
+        return;
       }
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -233,7 +333,7 @@ export function ClientPortalPage() {
       }
       sessionEstablished = true;
 
-      if (inviteToken && mode !== 'register') {
+      if (inviteToken) {
         await readResponse<{ client_id: string; invited_email: string }>(await fetch(portalApiUrl('/api/v1/client-portal/invitations/claim'), {
           method: 'POST',
           headers: {
@@ -249,7 +349,9 @@ export function ClientPortalPage() {
       setPortal(portalData);
       setInviteToken(null);
       setPassword('');
-      setNotice(mode === 'register' ? 'Your secure portal account is ready.' : '');
+      setRegistrationHandoffEmail(null);
+      setInviteAlreadyClaimed(false);
+      setNotice('');
       setError('');
     } catch (requestError) {
       if (supabase && sessionEstablished) {
@@ -262,9 +364,20 @@ export function ClientPortalPage() {
         setSession(null);
       }
       setPortal(null);
-      setError(requestError instanceof Error
-        ? requestError.message
-        : 'We could not verify your account. Check your email and password, then try again.');
+      if (requestError instanceof PortalRequestError && requestError.code === 'invitation_already_claimed') {
+        setMode('signin');
+        setInviteToken(null);
+        setEmail(normalizedEmail);
+        setInviteAlreadyClaimed(true);
+        setRegistrationHandoffEmail(null);
+        setPassword('');
+        removeInviteFromUrl();
+        setError('');
+      } else {
+        setError(requestError instanceof Error
+          ? requestError.message
+          : 'We could not verify your account. Check your email and password, then try again.');
+      }
     } finally {
       authFlowInProgress.current = false;
       setAuthenticating(false);
@@ -362,7 +475,25 @@ export function ClientPortalPage() {
             <p>{error || 'This portal is temporarily unavailable. Please contact your tax practice for help.'}</p>
             <p className="portal-setup-help">Site administrator: configure the public Supabase project URL and publishable key, plus the backend API URL, in the website hosting environment and redeploy. Never add a service-role key to the website.</p>
           </div>
-        ) : !authReady || loadingPortal ? (
+        ) : registrationSuccessEmail ? (
+          <div className="portal-registration-success" role="status" aria-live="polite">
+            <div className="portal-success-art" aria-hidden="true">
+              <span className="portal-success-halo" />
+              <span className="portal-success-check"><PortalIcon name="check" size={34} /></span>
+              <i className="portal-success-spark portal-success-spark-one" />
+              <i className="portal-success-spark portal-success-spark-two" />
+              <i className="portal-success-spark portal-success-spark-three" />
+              <i className="portal-success-spark portal-success-spark-four" />
+            </div>
+            <span className="portal-eyebrow"><i /> SECURE ACCOUNT CREATED</span>
+            <h1>Your portal is ready.</h1>
+            <p>Your account for <strong>{registrationSuccessEmail}</strong> has been created. Sign in with your new password to securely upload documents.</p>
+            <button type="button" className="portal-upload-button" onClick={continueRegistrationToSignIn}>
+              Continue to sign in <PortalIcon name="arrow" size={16} />
+            </button>
+            <span className="portal-success-redirect">Taking you to secure sign-in…</span>
+          </div>
+        ) : !authReady || loadingPortal || checkingInviteStatus ? (
           <div className="portal-state-card portal-loading-card" role="status">
             <span className="portal-loader" />
             <span className="portal-eyebrow">VERIFYING ACCESS</span>
@@ -472,6 +603,18 @@ export function ClientPortalPage() {
               <p>{mode === 'register'
                 ? 'Use the exact email address your tax practice has on file. Choose a strong password for future visits.'
                 : 'Use the email address and password you set up for your client portal.'}</p>
+              {registrationHandoffEmail && mode === 'signin' && (
+                <div className="portal-feedback portal-feedback-success portal-account-created-notice" role="status">
+                  <PortalIcon name="check" size={16} />
+                  <span>Your portal account was created successfully. Sign in below with the password you just chose.</span>
+                </div>
+              )}
+              {inviteAlreadyClaimed && mode === 'signin' && (
+                <div className="portal-feedback portal-feedback-success portal-account-created-notice" role="status">
+                  <PortalIcon name="check" size={16} />
+                  <span>This invitation has already been used to create your portal account. Sign in below to access your documents.</span>
+                </div>
+              )}
               {error && <div className="portal-feedback portal-feedback-error" role="alert">{error}</div>}
               {!inviteToken && mode === 'register' ? (
                 <div className="portal-invitation-required" role="status">
