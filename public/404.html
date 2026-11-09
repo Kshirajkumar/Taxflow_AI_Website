@@ -36,7 +36,8 @@
         animation: settle .55s cubic-bezier(.2, .7, .2, 1) both;
       }
       .brand { display: inline-flex; align-items: center; gap: 9px; color: #202b31; font-size: 15px; font-weight: 700; letter-spacing: -.04em; text-decoration: none; }
-      .brand-mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; background: #dfece4; color: #2d604e; font-family: Georgia, serif; font-size: 18px; }
+      .brand-mark { display: grid; width: 30px; height: 30px; place-items: center; overflow: hidden; border-radius: 9px; }
+      .brand-mark img { display: block; width: 100%; height: 100%; }
       .brand em { color: #56826c; font-size: .72em; font-style: normal; }
       .code { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 58px; color: #56826c; font: 500 12px/1.4 "IBM Plex Mono", Consolas, monospace; letter-spacing: .18em; }
       .dot { width: 7px; height: 7px; border-radius: 50%; background: #56826c; box-shadow: 0 0 0 5px #e5efe8; }
@@ -58,7 +59,6 @@
         body { background-image: linear-gradient(to bottom, rgba(210, 229, 220, .06) 1px, transparent 1px); }
         main { border-color: #2c3b3c; background: rgba(23, 34, 36, .94); box-shadow: 0 24px 70px rgba(0, 0, 0, .25); }
         .brand, h1 { color: #e7ecea; }
-        .brand-mark { color: #c0d8c6; background: #2b4038; }
         .dot { box-shadow: 0 0 0 5px #283b32; }
         p { color: #a8b5b5; }
         .button { border-color: #394b4b; color: #dbe4e1; background: #202e30; }
@@ -78,7 +78,7 @@
   </head>
   <body>
     <main>
-      <a class="brand" href="/" aria-label="Taxflow.AI home"><span class="brand-mark" aria-hidden="true">t.</span><span>TaxFlow <em>AI</em></span></a>
+      <a class="brand" href="/" aria-label="Taxflow.AI home"><span class="brand-mark" aria-hidden="true"><img src="/favicon.svg" alt="" /></span><span>TaxFlow <em>AI</em></span></a>
       <div class="code"><span>404</span><i class="dot" aria-hidden="true"></i><span>PAGE NOT FOUND</span></div>
       <h1>This page took<br /><span>a wrong turn.</span></h1>
       <p>The link may be outdated, or the page may have moved. Let’s get you back to something useful.</p>

@@ -1,0 +1,104 @@
+{
+  "siteUrl": "https://taxflowaiwebsite.vercel.app",
+  "pages": [
+    {
+      "path": "/",
+      "slug": "home",
+      "title": "Less busywork. More time to advise.",
+      "description": "TaxFlow AI helps solo Chartered Accountants collect client documents, prepare information for review, and keep the professional in control.",
+      "summary": "The TaxFlow AI homepage explains the product’s India-first direction for solo Chartered Accountants. It introduces document collection, AI-assisted preparation, human review, and current product status.",
+      "topics": ["Tax practice workflow", "Document collection", "Solo Chartered Accountants", "Human review", "India-first tax software"],
+      "section": "Explore TaxFlow",
+      "imageAlt": "Screenshot of the TaxFlow AI homepage, showing its tax-practice workflow overview.",
+      "indexable": true
+    },
+    {
+      "path": "/product",
+      "slug": "product",
+      "title": "TaxFlow AI product details",
+      "description": "See how TaxFlow AI is designed to organize tax documents, assist data preparation, and keep review decisions with the accountant.",
+      "summary": "The product page describes TaxFlow AI’s intended practice workflow, current internal testing, human review guardrails, and planned capabilities. It distinguishes the working demo from features that are not yet available.",
+      "topics": ["Tax software features", "Document organization", "AI-assisted data capture", "Accountant review", "Product roadmap"],
+      "section": "Explore TaxFlow",
+      "imageAlt": "Screenshot of the TaxFlow AI product page, with its workflow details and current product status.",
+      "indexable": true
+    },
+    {
+      "path": "/workflow-comparison",
+      "slug": "workflow-comparison",
+      "title": "TaxFlow AI workflow comparison",
+      "description": "Compare a common document-heavy accounting workflow with the connected workflow TaxFlow AI is being designed to support.",
+      "summary": "This page compares common manual document-work steps with TaxFlow AI’s intended workflow. The comparison is qualitative, not a measured time-saving or accuracy claim.",
+      "topics": ["Accounting workflow", "Tax document processing", "Practice operations", "Human oversight"],
+      "section": "Explore TaxFlow",
+      "imageAlt": "Screenshot of the TaxFlow AI workflow comparison page, showing its side-by-side process explanation.",
+      "indexable": true
+    },
+    {
+      "path": "/get-app",
+      "slug": "get-app",
+      "title": "TaxFlow AI desktop app",
+      "description": "Learn about the TaxFlow AI desktop workspace for independent Chartered Accountants. The app is in development and not yet available to install.",
+      "summary": "The get-app page explains the planned desktop workspace and shows a clearly labeled concept illustration. The application is still in development; no download is available yet.",
+      "topics": ["Tax software for desktop", "Solo Chartered Accountants", "Practice workspace", "Early access"],
+      "section": "Get started",
+      "imageAlt": "Screenshot of the TaxFlow AI desktop-app information page, including its concept workspace.",
+      "indexable": true
+    },
+    {
+      "path": "/waitlist",
+      "slug": "waitlist",
+      "title": "Join the TaxFlow AI waitlist",
+      "description": "Join the TaxFlow AI early-access waitlist for solo Chartered Accountants and receive occasional product updates.",
+      "summary": "The waitlist page lets solo Chartered Accountants request early-access updates. Joining is free, does not guarantee access, and does not require client documents or payment details.",
+      "topics": ["Tax software early access", "Chartered Accountant waitlist", "TaxFlow AI updates"],
+      "section": "Get started",
+      "imageAlt": "Screenshot of the TaxFlow AI waitlist page, showing its early-access information and signup form.",
+      "indexable": true
+    },
+    {
+      "path": "/privacy",
+      "slug": "privacy",
+      "title": "TaxFlow AI privacy notice",
+      "description": "Read how the TaxFlow AI website, waitlist, and invited-client portal collect and handle information.",
+      "summary": "The privacy notice describes information submitted to the waitlist, the client portal’s document flow, the service providers involved, and the choices available to visitors and invited clients.",
+      "topics": ["Tax software privacy", "Waitlist data", "Client portal", "Document handling"],
+      "section": "Trust and policies",
+      "imageAlt": "Screenshot of the TaxFlow AI privacy notice page.",
+      "indexable": true
+    },
+    {
+      "path": "/terms",
+      "slug": "terms",
+      "title": "TaxFlow AI website terms",
+      "description": "Review the terms for using the TaxFlow AI website, early-access waitlist, and invited-client portal.",
+      "summary": "The terms explain acceptable website and portal use, the limits of joining the waitlist, and that website content is informational rather than professional advice.",
+      "topics": ["Website terms", "Early access", "Client portal use", "Professional advice"],
+      "section": "Trust and policies",
+      "imageAlt": "Screenshot of the TaxFlow AI website terms page.",
+      "indexable": true
+    },
+    {
+      "path": "/portal",
+      "slug": "portal",
+      "title": "TaxFlow AI invited-client portal",
+      "description": "Invited clients can use the TaxFlow AI portal to securely share supported documents with their accounting practice.",
+      "summary": "The client portal is a private, invitation-only destination for clients sharing supported documents with their accounting practice. It is not a public signup or marketing page.",
+      "topics": ["Invited-client portal", "Private document sharing", "Accounting practice"],
+      "section": "For invited clients",
+      "imageAlt": "Screenshot of the TaxFlow AI client portal for invited practice clients.",
+      "indexable": false
+    },
+    {
+      "path": "/sitemap",
+      "slug": "sitemap",
+      "title": "TaxFlow AI website directory",
+      "description": "Browse the TaxFlow AI website by page, with clear descriptions of the product, workflows, waitlist, client portal, and policies.",
+      "summary": "The website directory links to every TaxFlow AI page and briefly explains what visitors can find there, including product information, early access, legal notices, and the invitation-only client portal.",
+      "topics": ["TaxFlow AI website pages", "Website directory", "Product information", "Client portal"],
+      "section": "Trust and policies",
+      "imageAlt": "Screenshot of the TaxFlow AI website directory, listing its pages and descriptions.",
+      "indexable": true
+    }
+  ]
+}

@@ -1,32 +1,37 @@
 {
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/portal",
-      "destination": "/index.html"
+      "destination": "/portal/index.html"
     },
     {
       "source": "/product",
-      "destination": "/index.html"
+      "destination": "/product/index.html"
     },
     {
       "source": "/waitlist",
-      "destination": "/index.html"
+      "destination": "/waitlist/index.html"
     },
     {
       "source": "/get-app",
-      "destination": "/index.html"
+      "destination": "/get-app/index.html"
     },
     {
       "source": "/workflow-comparison",
-      "destination": "/index.html"
+      "destination": "/workflow-comparison/index.html"
     },
     {
       "source": "/privacy",
-      "destination": "/index.html"
+      "destination": "/privacy/index.html"
     },
     {
       "source": "/terms",
-      "destination": "/index.html"
+      "destination": "/terms/index.html"
+    },
+    {
+      "source": "/sitemap",
+      "destination": "/sitemap/index.html"
     }
   ]
 }

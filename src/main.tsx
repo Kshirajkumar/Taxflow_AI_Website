@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { ClientPortalPage } from './portal/ClientPortalPage';
+import siteMetadata from '../site-pages.json';
 import './styles.css';
 
 type IconName =
@@ -75,8 +76,8 @@ function BrandGlyph({ size = 31 }: { size?: number }) {
   return (
     <svg aria-hidden="true" width={size} height={size} viewBox="0 0 30 30" fill="none">
       <rect width="30" height="30" rx="8" fill="var(--accent)" />
-      <path d="M8 11h14M8 15.5h8M8 20h5" stroke="var(--accent-ink)" strokeWidth="2" strokeLinecap="round" opacity=".55" />
-      <path d="m15.5 19.5 3.2 3.2 6-7.4" stroke="var(--accent-ink)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.5 9.5h15M7.5 14h10M7.5 18.5h5.5" stroke="var(--accent-ink)" strokeWidth="2" strokeLinecap="round" opacity=".72" />
+      <path d="m15 19 3.1 3.1 6-7" stroke="var(--accent-ink)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -295,7 +296,7 @@ function Header({ productPage = false }: { productPage?: boolean }) {
 
   useEffect(() => {
     const buttons = [...document.querySelectorAll<HTMLElement>(
-      'a[href="/waitlist"].button, a[href="/waitlist"].btn, a[href="/waitlist"].nav-cta, button.form-submit'
+      'a[href="/waitlist"].button, a[href="/waitlist"].btn, a[href="/waitlist"].nav-cta'
     )];
     if (!buttons.length) return;
 
@@ -429,14 +430,69 @@ function DashboardPreview() {
 function WaitlistForm({ initialEmail = '' }: { initialEmail?: string }) {
   const [state, setState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [alreadyJoined, setAlreadyJoined] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<'name' | 'email' | 'country' | 'consent', string>>>({});
+  const [validationAttempt, setValidationAttempt] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
   const endpoint = import.meta.env.VITE_WAITLIST_ENDPOINT?.trim();
+
+  useEffect(() => {
+    if (!validationAttempt) return;
+    const form = formRef.current;
+    if (!form) return;
+
+    const errorSummary = errorSummaryRef.current;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (errorSummary) {
+      errorSummary.focus({ preventScroll: true });
+      const summaryTop = errorSummary.getBoundingClientRect().top;
+      const card = form.closest<HTMLElement>('.waitlist-card, .waitlist-standalone-card');
+      const cardTop = card?.getBoundingClientRect().top ?? summaryTop;
+      const safeTop = (document.querySelector('header')?.getBoundingClientRect().bottom ?? 0) + 16 + summaryTop - cardTop;
+      if (summaryTop < safeTop || summaryTop > window.innerHeight) {
+        const root = document.documentElement;
+        const previousScrollBehavior = root.style.scrollBehavior;
+        root.style.scrollBehavior = 'auto';
+        window.scrollTo(0, Math.max(0, window.scrollY + summaryTop - safeTop));
+        root.style.scrollBehavior = previousScrollBehavior;
+      }
+    }
+    if (reduceMotion) return;
+
+    form.querySelectorAll<HTMLElement>('.is-invalid').forEach((field) => {
+      field.animate(
+        [{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }],
+        { duration: 260, easing: 'ease-in-out' }
+      );
+    });
+  }, [validationAttempt]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    if (!form.reportValidity()) return;
+    const name = form.querySelector<HTMLInputElement>('[name="name"]');
+    const emailInput = form.querySelector<HTMLInputElement>('[name="email"]');
+    const country = form.querySelector<HTMLSelectElement>('[name="country"]');
+    const consent = form.querySelector<HTMLInputElement>('[name="consent"]');
+    const errors: typeof fieldErrors = {};
+
+    if (!name?.value.trim()) errors.name = 'Enter your name to continue.';
+    if (!emailInput?.value.trim()) errors.email = 'Enter your email address.';
+    else if (!emailInput.validity.valid) errors.email = 'Enter a valid email address.';
+    if (!country?.value) errors.country = 'Select your country to continue.';
+    if (!consent?.checked) errors.consent = 'Consent is required to join the waitlist.';
+    setFieldErrors(errors);
+
+    if (Object.values(errors).some(Boolean)) {
+      setState('idle');
+      setValidationAttempt((attempt) => attempt + 1);
+      return;
+    }
+
     setState('submitting');
     setMessage('');
+    setAlreadyJoined(false);
 
     const data = Object.fromEntries(new FormData(form).entries());
     if (data.website) {
@@ -451,29 +507,44 @@ function WaitlistForm({ initialEmail = '' }: { initialEmail?: string }) {
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...data, email })
+          body: JSON.stringify({ ...data, email, role: 'CA (Chartered Accountant)' })
         });
         if (!response.ok) throw new Error('The waitlist service could not accept your request. Please try again.');
-        setMessage('Your details have been sent securely. We’ll be in touch when there’s news to share.');
+        const result = response.headers.get('content-type')?.includes('application/json')
+          ? await response.json() as { alreadyJoined?: unknown }
+          : null;
+        const duplicate = result?.alreadyJoined === true;
+        setAlreadyJoined(duplicate);
+        setMessage(duplicate
+          ? 'This email address is already on our waitlist. No need to join again.'
+          : 'Your details have been sent securely. We’ll be in touch when there’s news to share.');
       } else if (supabase) {
-        const { error } = await supabase.rpc('join_website_waitlist', {
+        const { data: inserted, error } = await supabase.rpc('join_website_waitlist', {
           p_email: email,
           p_consent: data.consent === 'true',
-          p_name: String(data.name ?? '').trim() || null,
-          p_firm: String(data.firm ?? '').trim() || null,
-          p_role: String(data.role ?? '').trim() || null,
-          p_country: String(data.country ?? '').trim() || null,
-          p_team_size: String(data.size ?? '').trim() || null
+          p_name: String(data.name).trim(),
+          p_country: String(data.country).trim()
         });
         if (error) throw new Error('We couldn’t save your request. Please try again in a moment.');
-        setMessage('You’re on the waitlist. We’ll share a thoughtful update when there’s meaningful news.');
+        if (typeof inserted !== 'boolean') {
+          throw new Error('The waitlist service needs an update. Please try again later.');
+        }
+        const duplicate = !inserted;
+        setAlreadyJoined(duplicate);
+        setMessage(duplicate
+          ? 'This email address is already on our waitlist. No need to join again.'
+          : 'You’re on the waitlist. We’ll share a thoughtful update when there’s meaningful news.');
       } else {
         const saved = JSON.parse(localStorage.getItem('taxflow_waitlist_demo') || '[]') as Array<Record<string, FormDataEntryValue>>;
-        if (!saved.some((entry) => String(entry.email).toLowerCase() === email)) {
+        const duplicate = saved.some((entry) => String(entry.email).trim().toLowerCase() === email);
+        if (!duplicate) {
           saved.push({ ...data, email, savedAt: new Date().toISOString() });
           localStorage.setItem('taxflow_waitlist_demo', JSON.stringify(saved));
         }
-        setMessage('Thanks for your interest. This preview saved your request in this browser only; it has not been sent to Taxflow.');
+        setAlreadyJoined(duplicate);
+        setMessage(duplicate
+          ? 'This email address is already on this browser’s preview list.'
+          : 'Thanks for your interest. This preview saved your request in this browser only; it has not been sent to Taxflow.');
       }
       setState('success');
       form.reset();
@@ -494,73 +565,122 @@ function WaitlistForm({ initialEmail = '' }: { initialEmail?: string }) {
           <span className="success-emblem-ring" />
           <span className="success-emblem-core"><Icon name="check" size={28} /></span>
         </div>
-        <span className="eyebrow"><span className="status-dot-live" /> EARLY ACCESS REQUEST RECEIVED</span>
-        <h3>You’re on the list.</h3>
+        <span className="eyebrow"><span className="status-dot-live" /> {alreadyJoined ? 'ALREADY ON THE WAITLIST' : 'EARLY ACCESS REQUEST RECEIVED'}</span>
+        <h3>{alreadyJoined ? 'You’re already on the list.' : 'You’re on the list.'}</h3>
         <p>{message}</p>
-        <div className="success-next-step"><span><Icon name="mail" size={17} /></span><p><strong>What happens next</strong><br />We’ll email you when there’s a meaningful early-access update.</p></div>
+        <div className="success-next-step"><span><Icon name={alreadyJoined ? 'check' : 'mail'} size={17} /></span><p><strong>{alreadyJoined ? 'You’re all set' : 'What happens next'}</strong><br />{alreadyJoined ? 'There’s no need to submit this email again.' : 'We’ll email you when there’s a meaningful early-access update.'}</p></div>
         <a className="success-home-link" href="/">Back to TaxFlow <Icon name="arrow" size={16} /></a>
       </div>
     );
   }
 
   return (
-    <form className="waitlist-form" onSubmit={handleSubmit}>
+    <form className="waitlist-form" onSubmit={handleSubmit} aria-busy={state === 'submitting'} noValidate ref={formRef}>
+      {validationAttempt > 0 && Object.values(fieldErrors).some(Boolean) && (
+        <div className="form-message form-error form-error-summary" role="alert" tabIndex={-1} ref={errorSummaryRef}>
+          <strong>Please complete the highlighted fields below.</strong>
+        </div>
+      )}
+      <div className="form-fields">
+        <div className={`form-field waitlist-form-field${fieldErrors.name ? ' is-invalid' : ''}`}>
+          <label htmlFor="waitlist-name">Your name</label>
+          <input
+            autoComplete="name"
+            id="waitlist-name"
+            maxLength={120}
+            name="name"
+            placeholder="e.g. Ananya Mehta"
+            required
+            aria-invalid={Boolean(fieldErrors.name)}
+            aria-describedby={fieldErrors.name ? 'waitlist-name-error' : undefined}
+            onChange={(event) => {
+              if (!validationAttempt) return;
+              const value = event.currentTarget.value.trim();
+              setFieldErrors((current) => ({ ...current, name: value ? undefined : 'Enter your name to continue.' }));
+            }}
+          />
+          {fieldErrors.name && <span className="field-error" id="waitlist-name-error">{fieldErrors.name}</span>}
+        </div>
+        <div className={`form-field waitlist-form-field${fieldErrors.email ? ' is-invalid' : ''}`}>
+          <label htmlFor="waitlist-email">Email address</label>
+          <input
+            autoComplete="email"
+            defaultValue={initialEmail}
+            id="waitlist-email"
+            maxLength={254}
+            name="email"
+            type="email"
+            placeholder="you@yourfirm.com"
+            required
+            aria-invalid={Boolean(fieldErrors.email)}
+            aria-describedby={fieldErrors.email ? 'waitlist-email-error' : undefined}
+            onChange={(event) => {
+              if (!validationAttempt) return;
+              const input = event.currentTarget;
+              const value = input.value.trim();
+              setFieldErrors((current) => ({
+                ...current,
+                email: !value ? 'Enter your email address.' : input.validity.valid ? undefined : 'Enter a valid email address.'
+              }));
+            }}
+          />
+          {fieldErrors.email && <span className="field-error" id="waitlist-email-error">{fieldErrors.email}</span>}
+        </div>
+      </div>
       <div className="form-fields">
         <label className="form-field">
-          <span>Your name <span className="optional-label">Optional</span></span>
-          <input autoComplete="name" maxLength={120} name="name" placeholder="e.g. Ananya Mehta" />
+          <span>Your role</span>
+          <span className="locked-role-box"><Icon name="lock" size={14} /><strong>CA (Chartered Accountant)</strong><span>Locked</span></span>
         </label>
-        <label className="form-field">
-          <span>Email address</span>
-          <input autoComplete="email" defaultValue={initialEmail} maxLength={200} name="email" type="email" placeholder="you@yourfirm.com" required />
+        <div className={`form-field waitlist-form-field${fieldErrors.country ? ' is-invalid' : ''}`}>
+          <label htmlFor="waitlist-country">Country <span className="required-label">Required</span></label>
+          <select
+            id="waitlist-country"
+            name="country"
+            defaultValue=""
+            required
+            aria-invalid={Boolean(fieldErrors.country)}
+            aria-describedby={fieldErrors.country ? 'waitlist-country-error' : undefined}
+            onChange={(event) => {
+              if (!validationAttempt) return;
+              const value = event.currentTarget.value;
+              setFieldErrors((current) => ({ ...current, country: value ? undefined : 'Select your country to continue.' }));
+            }}
+          >
+            <option value="" disabled>Select a country</option>
+            <option value="India">India</option>
+            <option value="United States">United States</option>
+            <option value="United Arab Emirates">United Arab Emirates</option>
+            <option value="Singapore">Singapore</option>
+            <option value="United Kingdom">United Kingdom</option>
+          </select>
+          {fieldErrors.country && <span className="field-error" id="waitlist-country-error">{fieldErrors.country}</span>}
+        </div>
+      </div>
+      <div className={`consent-field${fieldErrors.consent ? ' is-invalid' : ''}`}>
+        <label className="consent-check" htmlFor="waitlist-consent">
+          <input
+            id="waitlist-consent"
+            type="checkbox"
+            name="consent"
+            value="true"
+            required
+            aria-invalid={Boolean(fieldErrors.consent)}
+            aria-describedby={fieldErrors.consent ? 'waitlist-consent-error' : undefined}
+            onChange={(event) => {
+              if (!validationAttempt) return;
+              const checked = event.currentTarget.checked;
+              setFieldErrors((current) => ({ ...current, consent: checked ? undefined : 'Consent is required to join the waitlist.' }));
+            }}
+          />
+          <span>I agree that Taxflow AI may email me about early access. See the <a href="/privacy">privacy notice</a>.</span>
         </label>
+        {fieldErrors.consent && <span className="field-error" id="waitlist-consent-error">{fieldErrors.consent}</span>}
       </div>
-      <label className="form-field">
-        <span>Firm name <span className="optional-label">Optional</span></span>
-        <input autoComplete="organization" maxLength={160} name="firm" placeholder="Your practice or firm" />
-      </label>
-      <div className="form-fields">
-      <label className="form-field">
-        <span>Your role <span className="optional-label">Optional</span></span>
-        <select name="role" defaultValue="">
-          <option value="">Select your role</option>
-          <option value="Chartered accountant">Chartered accountant</option>
-          <option value="Accountant or bookkeeper">Accountant or bookkeeper</option>
-          <option value="Firm owner or partner">Firm owner or partner</option>
-          <option value="Tax consultant">Tax consultant</option>
-          <option value="Other">Other</option>
-        </select>
-      </label>
-      <label className="form-field">
-        <span>Country <span className="optional-label">Optional</span></span>
-        <select name="country" defaultValue="">
-          <option value="">Select a country</option>
-          <option value="India">India</option>
-          <option value="United States">United States</option>
-          <option value="United Arab Emirates">United Arab Emirates</option>
-          <option value="Singapore">Singapore</option>
-          <option value="United Kingdom">United Kingdom</option>
-          <option value="Other">Other</option>
-        </select>
-      </label>
-      </div>
-      <label className="form-field">
-        <span>People in your firm <span className="optional-label">Optional</span></span>
-        <select name="size" defaultValue="">
-          <option value="">Select firm size</option>
-          <option value="Just me">Just me</option>
-          <option value="2 to 5">2 to 5</option>
-          <option value="6 to 20">6 to 20</option>
-          <option value="21 or more">21 or more</option>
-        </select>
-      </label>
-      <label className="consent-check">
-        <input type="checkbox" name="consent" value="true" required />
-        <span>I agree that Taxflow AI may email me about early access. See the <a href="/privacy">privacy notice</a>.</span>
-      </label>
       <label className="honeypot" aria-hidden="true">Leave this field empty<input autoComplete="off" name="website" tabIndex={-1} type="text" /></label>
-      <button className="button button-dark form-submit" type="submit" disabled={state === 'submitting'}>
-        {state === 'submitting' ? 'Sending…' : 'Join the waitlist'}
+      <button className="button button-dark form-submit" type="submit" disabled={state === 'submitting'} aria-busy={state === 'submitting'}>
+        {state === 'submitting' && <span className="form-spinner" aria-hidden="true" />}
+        {state === 'submitting' ? 'Checking and joining…' : 'Join the waitlist'}
         <span className="arrow" aria-hidden="true">→</span>
       </button>
       <p className="form-disclaimer">
@@ -643,7 +763,7 @@ function Footer({ productPage = false }: { productPage?: boolean }) {
           <span className="footer-wordmark-ai" aria-hidden="true" style={{ opacity: Math.max(0, Math.min(1, typingProgress * 9 - wordmark.length - 1)) }}>AI</span>
         </div>
       </div>
-      <div className="footer-bottom"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><span>© {new Date().getFullYear()} TaxFlow AI</span><span>Names, files, and figures shown here are illustrative.</span></div>
+      <div className="footer-bottom"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/sitemap">All pages</a><span>© {new Date().getFullYear()} TaxFlow AI</span><span>Names, files, and figures shown here are illustrative.</span></div>
     </footer>
   );
 }
@@ -661,7 +781,7 @@ function WaitlistPage() {
             <a href="/" className="waitlist-back"><Icon name="arrow" size={15} /> Back to the website</a>
             <span className="eyebrow"><span className="status-dot-live" /> PRIVATE BETA · EARLY ACCESS</span>
             <h1>Make room for<br /><span>the work that matters.</span></h1>
-            <p>We’re building a clearer, more considered way for accounting practices to collect documents and review the work. Join the waitlist to hear about early access.</p>
+            <p>We’re building TaxFlow for solo Chartered Accountants to collect documents, review tax work, and keep client workflows in one clear place. Join the waitlist to hear about early access.</p>
             <ul className="waitlist-benefits">
               <li><span><Icon name="mail" size={16} /></span><span><strong>A thoughtful update when it matters</strong><small>We’ll only write when there is real news to share.</small></span></li>
               <li><span><Icon name="eye" size={16} /></span><span><strong>A chance to shape the product</strong><small>Early feedback helps us build around real practice workflows.</small></span></li>
@@ -670,7 +790,7 @@ function WaitlistPage() {
           </div>
           <div className="waitlist-card waitlist-standalone-card" data-reveal>
             <div className="waitlist-form-heading"><span className="waitlist-card-icon"><Icon name="spark" size={18} /></span><div><span className="eyebrow">TAXFLOW AI · EARLY ACCESS</span><h2>Join the waitlist</h2></div></div>
-            <p className="waitlist-form-intro">Start with your email. Share any extra details only if you’d like.</p>
+            <p className="waitlist-form-intro">Your name, email, and consent are all we need. Your CA role is already set.</p>
             <WaitlistForm initialEmail={email} />
             <p className="waitlist-privacy-note"><Icon name="shield" size={14} /> Your details are used only for early-access updates. <a href="/privacy">Read our privacy notice.</a></p>
           </div>
@@ -700,6 +820,48 @@ function NotFoundPage() {
         </section>
       </main>
       <Footer />
+    </>
+  );
+}
+
+function SiteMapPage() {
+  useReveal();
+  const pages = siteMetadata.pages.filter((page) => page.path !== '/sitemap');
+  const sections = [...new Set(pages.map((page) => page.section))];
+
+  return (
+    <>
+      <Header productPage />
+      <main className="site-directory">
+        <section className="site-directory-hero">
+          <div className="ledger-wrap" data-reveal>
+            <a href="/" className="back-link"><Icon name="arrow" size={15} /> Back to the website</a>
+            <span className="eyebrow">TAXFLOW AI · WEBSITE DIRECTORY</span>
+            <h1>Find the right<br /><em>place to start.</em></h1>
+            <p>Explore the product, its workflow, early access, and the information that helps you decide if TaxFlow AI fits your practice.</p>
+          </div>
+        </section>
+        <div className="ledger-wrap site-directory-body">
+          {sections.map((section) => (
+            <section className="site-directory-section" key={section} aria-labelledby={`directory-${section.replace(/\W+/g, '-').toLowerCase()}`}>
+              <h2 id={`directory-${section.replace(/\W+/g, '-').toLowerCase()}`}>{section}</h2>
+              <div className="site-directory-links">
+                {pages.filter((page) => page.section === section).map((page) => (
+                  <article className="site-directory-entry" key={page.path}>
+                    <a href={page.path}>
+                      <span>{page.title}</span>
+                      {!page.indexable && <span className="site-directory-access">Invitation only</span>}
+                    </a>
+                    <p>{page.summary}</p>
+                    <p className="site-directory-topics">Topics: {page.topics.join(' · ')}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </main>
+      <Footer productPage />
     </>
   );
 }
@@ -1581,7 +1743,7 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
     ? [
       {
         title: 'Information you provide',
-        paragraphs: ['The waitlist asks for your email address and consent to receive early-access updates. You may also choose to share your name, firm, role, country, and firm size. Do not submit client records or tax documents through the marketing pages or waitlist. Invited clients may submit supported documents only through the separate /portal workflow.']
+        paragraphs: ['The waitlist asks for your name, email address, country, and consent to receive early-access updates. Your role is recorded as CA (Chartered Accountant). Do not submit client records or tax documents through the marketing pages or waitlist. Invited clients may submit supported documents only through the separate /portal workflow.']
       },
       {
         title: 'How we use it',
@@ -1667,21 +1829,27 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
 
 function App() {
   useEffect(() => {
-    const path = window.location.pathname;
-    const titles: Record<string, string> = {
-      '/portal': 'Secure client portal — Taxflow.AI',
-      '/product': 'Product details — Taxflow.AI',
-      '/waitlist': 'Join the waitlist — Taxflow.AI',
-      '/get-app': 'Get the TaxFlow app — Coming soon',
-      '/workflow-comparison': 'Workflow comparison — Taxflow.AI',
-      '/privacy': 'Privacy notice — Taxflow.AI',
-      '/terms': 'Terms of use — Taxflow.AI',
-    };
-    document.title = titles[path] ?? (path === '/' ? 'Taxflow.AI — More time for the work that matters' : 'Page not found — Taxflow.AI');
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
+    const page = siteMetadata.pages.find((entry) => entry.path === path);
+    document.title = page ? `${page.title} | TaxFlow AI` : 'Page not found | TaxFlow AI';
+    const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (page && description) description.content = page.description;
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!page || !page.indexable) {
+      if (!robots) {
+        robots = document.createElement('meta');
+        robots.name = 'robots';
+        document.head.append(robots);
+      }
+      robots.content = 'noindex, nofollow';
+    } else {
+      if (robots) robots.content = 'index, follow, max-image-preview:large';
+    }
   }, []);
 
-  const path = window.location.pathname;
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
   if (path === '/portal') return <ClientPortalPage />;
+  if (path === '/sitemap') return <SiteMapPage />;
   if (path === '/waitlist') return <WaitlistPage />;
   if (path === '/get-app') return <GetAppPage />;
   if (path === '/workflow-comparison') return <WorkflowComparisonPage />;
