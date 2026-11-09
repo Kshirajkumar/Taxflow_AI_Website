@@ -60,9 +60,9 @@
       "path": "/privacy",
       "slug": "privacy",
       "title": "TaxFlow AI privacy notice",
-      "description": "Read how the TaxFlow AI website, waitlist, and invited-client portal collect and handle information.",
-      "summary": "The privacy notice describes information submitted to the waitlist, the client portal’s document flow, the service providers involved, and the choices available to visitors and invited clients.",
-      "topics": ["Tax software privacy", "Waitlist data", "Client portal", "Document handling"],
+      "description": "Read how the TaxFlow AI website, waitlist, Vercel analytics, and invited-client portal collect and handle information.",
+      "summary": "The privacy notice explains waitlist data, client-portal document handling, Vercel analytics and performance measurements, service providers, and visitor choices.",
+      "topics": ["Tax software privacy", "Website analytics", "Web performance data", "Waitlist data", "Client portal", "Document handling"],
       "section": "Trust and policies",
       "imageAlt": "Screenshot of the TaxFlow AI privacy notice page.",
       "indexable": true

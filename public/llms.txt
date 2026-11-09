@@ -26,9 +26,9 @@ The current application is a working demo; product descriptions distinguish inte
   Summary: The waitlist page lets solo Chartered Accountants request early-access updates. Joining is free, does not guarantee access, and does not require client documents or payment details.
   Topics: Tax software early access, Chartered Accountant waitlist, TaxFlow AI updates.
 
-- [TaxFlow AI privacy notice](https://taxflowaiwebsite.vercel.app/privacy): Read how the TaxFlow AI website, waitlist, and invited-client portal collect and handle information.
-  Summary: The privacy notice describes information submitted to the waitlist, the client portal’s document flow, the service providers involved, and the choices available to visitors and invited clients.
-  Topics: Tax software privacy, Waitlist data, Client portal, Document handling.
+- [TaxFlow AI privacy notice](https://taxflowaiwebsite.vercel.app/privacy): Read how the TaxFlow AI website, waitlist, Vercel analytics, and invited-client portal collect and handle information.
+  Summary: The privacy notice explains waitlist data, client-portal document handling, Vercel analytics and performance measurements, service providers, and visitor choices.
+  Topics: Tax software privacy, Website analytics, Web performance data, Waitlist data, Client portal, Document handling.
 
 - [TaxFlow AI website terms](https://taxflowaiwebsite.vercel.app/terms): Review the terms for using the TaxFlow AI website, early-access waitlist, and invited-client portal.
   Summary: The terms explain acceptable website and portal use, the limits of joining the waitlist, and that website content is informational rather than professional advice.

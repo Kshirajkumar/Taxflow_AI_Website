@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { ClientPortalPage } from './portal/ClientPortalPage';
 import siteMetadata from '../site-pages.json';
@@ -1759,6 +1760,10 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
         paragraphs: ['The website host and any configured waitlist provider process information needed to deliver the site and store submissions. Client-portal files are transmitted to the Taxflow backend and stored in a private Supabase Storage bucket; they are then available to the authorized practice and may be copied to its configured desktop vault. Hosting, API, authentication, and storage providers process information to operate these services under their own terms. The browser does not receive the backend service-role key or direct access to private file storage.']
       },
       {
+        title: 'Analytics and site performance',
+        paragraphs: ['When enabled for a Vercel deployment, this website uses Vercel Web Analytics for aggregated page-view reports and Speed Insights for performance measurements such as Web Vitals. Vercel may process page paths, referrers, browser and device details, network speed, approximate country, and event timestamps for these reports. Vercel states that Web Analytics does not use third-party cookies and that its analytics and Speed Insights data are not designed to identify individual visitors; see Vercel’s privacy documentation for details. Email query parameters used to prefill the waitlist are removed from both analytics event URLs. These tools are not loaded on the invitation-only /portal, and this website does not configure custom analytics events.']
+      },
+      {
         title: 'Your choices and deletion',
         paragraphs: ['You can choose not to join, and you can stop receiving updates by following the instructions in an email from TaxFlow AI. To ask for a waitlist record to be removed, reply to an early-access email you received from us. For portal access or document-retention requests, contact the practice that invited you; revoking portal access prevents future portal requests but does not itself delete files already received or copies saved by the practice. A fixed deletion schedule has not yet been published.']
       },
@@ -1806,7 +1811,7 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
             <p>{isPrivacy
               ? 'Here is what the TaxFlow AI website collects when you join the waitlist, how it is used, and the choices you have.'
               : 'A plain-language guide to using this website and joining the early-access list while TaxFlow AI is in development.'}</p>
-            <span className="legal-updated">LAST UPDATED · 19 OCTOBER 2026</span>
+            <span className="legal-updated">LAST UPDATED · {isPrivacy ? '9 NOVEMBER 2026' : '19 OCTOBER 2026'}</span>
           </div>
         </section>
         <section className="legal-sections ledger-wrap" aria-label={isPrivacy ? 'Privacy notice details' : 'Terms of use details'}>
@@ -1861,6 +1866,21 @@ function App() {
   return <NotFoundPage />;
 }
 
+function redactWaitlistEmail<T extends { url: string }>(event: T): T {
+  const url = new URL(event.url, window.location.origin);
+  if (url.pathname.replace(/\/+$/, '') !== '/waitlist' || !url.searchParams.has('email')) return event;
+  url.searchParams.delete('email');
+  return { ...event, url: event.url.startsWith('/') ? `${url.pathname}${url.search}` : url.toString() };
+}
+
+const isPortalPage = window.location.pathname.replace(/\/+$/, '') === '/portal';
+
 createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><>{window.location.pathname === '/portal' ? null : <CursorDotField />}<App /><Analytics /></></React.StrictMode>
+  <React.StrictMode>
+    <>
+      {!isPortalPage && <CursorDotField />}
+      <App />
+      {!isPortalPage && <><Analytics beforeSend={redactWaitlistEmail} /><SpeedInsights beforeSend={redactWaitlistEmail} /></>}
+    </>
+  </React.StrictMode>
 );
