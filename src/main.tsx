@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Analytics } from '@vercel/analytics/react';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { ClientPortalPage } from './portal/ClientPortalPage';
 import siteMetadata from '../site-pages.json';
@@ -1861,5 +1862,5 @@ function App() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><>{window.location.pathname === '/portal' ? null : <CursorDotField />}<App /></></React.StrictMode>
+  <React.StrictMode><>{window.location.pathname === '/portal' ? null : <CursorDotField />}<App /><Analytics /></></React.StrictMode>
 );
