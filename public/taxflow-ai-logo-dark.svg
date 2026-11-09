@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 246 42" role="img" aria-labelledby="title">
+  <title id="title">TaxFlow AI</title>
+  <rect width="42" height="42" rx="11" fill="#7896f3"/>
+  <path d="M10 13.5h21M10 20h14M10 26.5h8" fill="none" stroke="#14243a" stroke-linecap="round" stroke-width="2.6" opacity=".9"/>
+  <path d="m21 27 4.1 4.1 8-9.2" fill="none" stroke="#14243a" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+  <text x="54" y="30" fill="#e9efe7" font-family="Public Sans, Arial, sans-serif" font-size="27" font-weight="700" letter-spacing="-1.4">TaxFlow</text>
+  <text x="163" y="30" fill="#a7b5a8" font-family="Public Sans, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing=".3">AI</text>
+</svg>
