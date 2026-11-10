@@ -103,6 +103,39 @@ async function readResponse<T>(response: Response): Promise<T> {
   return payload.data;
 }
 
+function getPortalAuthErrorMessage(requestError: unknown, mode: 'register' | 'signin') {
+  if (requestError instanceof PortalRequestError) {
+    switch (requestError.code) {
+      case 'password_policy':
+        return 'Choose a stronger password that meets the portal password requirements, then try again.';
+      case 'invalid_email':
+        return 'Check the email address and make sure it exactly matches the address your practice has on file.';
+      case 'email_in_use_by_non_portal_account':
+        return 'This email is already used for a TaxFlow practice account. Ask your CA for a different client email address.';
+      case 'portal_auth_rate_limited':
+        return 'Too many attempts were made. Please wait a few minutes before trying again.';
+      case 'portal_auth_unavailable':
+      case 'portal_account_creation_failed':
+        return 'The portal account service is temporarily unavailable. Please try again shortly. If the problem continues, contact your practice.';
+      case 'invitation_already_claimed':
+        return 'This invitation has already been used. Sign in with the portal email and password you created.';
+      default:
+        return requestError.status >= 500
+          ? 'The portal service is temporarily unavailable. Please try again shortly.'
+          : requestError.message;
+    }
+  }
+  if (requestError instanceof TypeError) {
+    return 'We could not reach the portal service. Check your internet connection and try again.';
+  }
+  if (requestError instanceof Error && mode === 'signin' && /invalid login credentials/i.test(requestError.message)) {
+    return 'The email or password is incorrect. Check your details and try again.';
+  }
+  return requestError instanceof Error
+    ? requestError.message
+    : 'We could not verify your account. Check your details and try again.';
+}
+
 async function getPortalData(token: string): Promise<PortalData> {
   const [meResponse, documentsResponse] = await Promise.all([
     fetch(portalApiUrl('/api/v1/client-portal/me'), { headers: { Authorization: `Bearer ${token}` } }),
@@ -305,6 +338,10 @@ export function ClientPortalPage() {
     event.preventDefault();
     if (!supabase || authenticating) return;
     const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setError('Enter the email address your practice has on file.');
+      return;
+    }
     setAuthenticating(true);
     setError('');
     setInviteStatusNotice('');
@@ -389,13 +426,12 @@ export function ClientPortalPage() {
           && requestError instanceof PortalRequestError
           && requestError.status === 400
           && /invitation is invalid or expired/i.test(requestError.message);
+        const friendlyError = getPortalAuthErrorMessage(requestError, mode);
         setError(invalidInvitation
           ? 'We couldn’t use this invitation. It may have expired, already been used, or the email may not match your CA’s record. Check the exact email or ask your CA for a fresh link. If you already registered, choose “Already enrolled? Sign in.”'
           : requestError instanceof TypeError
             ? 'We couldn’t reach the portal service. Check your internet connection and try again. If the problem continues, contact your tax practice.'
-            : requestError instanceof Error
-              ? requestError.message
-              : 'We could not verify your account. Check your email and password, then try again.');
+            : friendlyError);
       }
     } finally {
       authFlowInProgress.current = false;
