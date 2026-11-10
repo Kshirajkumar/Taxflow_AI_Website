@@ -322,3 +322,86 @@
   .portal-welcome h1 { max-width: 100%; font-size: 30px; }
   .portal-welcome-art { opacity: .18; }
 }
+
+/* Portal polish: keep the secure flow familiar while giving the page a stronger brand shell. */
+.client-portal {
+  --portal-blue: #3157e8;
+  --portal-blue-dark: #2444bf;
+  --portal-line: #d7e0ef;
+  --portal-surface: rgba(255, 255, 255, .9);
+  background:
+    radial-gradient(circle at 8% 8%, rgba(92, 126, 239, .12), transparent 26rem),
+    radial-gradient(circle at 96% 88%, rgba(35, 147, 106, .08), transparent 25rem),
+    #f5f7fb;
+}
+
+.portal-header {
+  height: 86px;
+  border-bottom-color: rgba(31, 54, 84, .13);
+}
+
+.portal-wordmark {
+  min-height: 44px;
+  padding: 5px 0;
+}
+
+.portal-logo {
+  display: block;
+  width: 185px;
+  height: auto;
+}
+
+.portal-logo-dark { display: none; }
+.portal-theme-toggle { min-height: 36px; padding: 8px 13px; border-radius: 10px; font-weight: 600; }
+.portal-theme-toggle:focus-visible,
+.portal-signout:focus-visible,
+.portal-wordmark:focus-visible,
+.portal-upload-button:focus-visible,
+.portal-dropzone:focus-visible { outline: 3px solid rgba(49, 87, 232, .28); outline-offset: 3px; }
+
+.portal-main { padding-top: 68px; }
+
+.portal-login-layout {
+  width: min(1080px, 100%);
+  gap: clamp(56px, 9vw, 132px);
+}
+
+.portal-login-copy h1 { max-width: 570px; font-size: clamp(42px, 5.1vw, 64px); letter-spacing: -3.4px; }
+.portal-login-copy > p { max-width: 510px; font-size: 14px; line-height: 1.85; }
+.portal-eyebrow { color: #536684; }
+.portal-trust-list { gap: 17px; margin-top: 35px; }
+.portal-trust-list > div { gap: 14px; }
+.portal-trust-list > div > span { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.82); }
+
+.portal-login-card {
+  border-color: rgba(185, 199, 222, .85);
+  border-radius: 20px;
+  padding: 36px 36px 27px;
+  box-shadow: 0 28px 80px rgba(29, 48, 84, .1), 0 5px 16px rgba(29, 48, 84, .04);
+}
+
+.portal-login-card-mark { width: 46px; height: 46px; border-radius: 14px; }
+.portal-login-card h2 { font-size: 27px; letter-spacing: -1px; }
+.portal-login-card > p { max-width: 330px; font-size: 12px; }
+.portal-login-card form input { min-height: 50px; border-radius: 10px; }
+.portal-login-card form input:hover { border-color: #aab8d2; }
+.portal-upload-button { min-height: 50px; border-radius: 10px; background: linear-gradient(110deg, #3157e8, #4268f0); }
+
+.client-portal[data-theme="dark"] {
+  background:
+    radial-gradient(circle at 8% 8%, rgba(80, 109, 210, .17), transparent 27rem),
+    radial-gradient(circle at 96% 88%, rgba(24, 112, 82, .14), transparent 25rem),
+    #060a13;
+}
+
+.client-portal[data-theme="dark"] .portal-logo-light { display: none; }
+.client-portal[data-theme="dark"] .portal-logo-dark { display: block; }
+.client-portal[data-theme="dark"] .portal-header { border-bottom-color: rgba(166, 180, 211, .18); }
+.client-portal[data-theme="dark"] .portal-eyebrow { color: #a6b4d3; }
+.client-portal[data-theme="dark"] .portal-login-card { border-color: rgba(83, 103, 140, .55); }
+
+@media (max-width: 650px) {
+  .portal-logo { width: 160px; }
+  .portal-main { padding-top: 38px; }
+  .portal-login-copy h1 { letter-spacing: -2.2px; }
+}

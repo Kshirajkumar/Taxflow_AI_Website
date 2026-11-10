@@ -506,8 +506,8 @@ export function ClientPortalPage() {
       <div className="portal-background-glow portal-background-glow-two" />
       <header className="portal-header">
         <a href="/" className="portal-wordmark" aria-label="Taxflow AI home">
-          <span className="portal-brand-glyph">T<span>.</span></span>
-          <span>Taxflow<span className="portal-brand-ai">.AI</span></span>
+          <img className="portal-logo portal-logo-light" src="/taxflow-ai-logo.svg" alt="TaxFlow.AI" />
+          <img className="portal-logo portal-logo-dark" src="/taxflow-ai-logo-dark.svg" alt="TaxFlow.AI" />
         </a>
         <div className="portal-header-right">
           <span className="portal-secure-label"><PortalIcon name="lock" size={14} /> PRIVATE CLIENT PORTAL</span>
