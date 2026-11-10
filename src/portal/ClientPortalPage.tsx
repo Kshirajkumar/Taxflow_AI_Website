@@ -116,6 +116,8 @@ function getPortalAuthErrorMessage(requestError: unknown, mode: 'register' | 'si
         return 'Too many attempts were made. Please wait a few minutes before trying again.';
       case 'portal_auth_configuration':
         return 'Client portal enrollment is not configured correctly on the practice server. Please contact your practice administrator.';
+      case 'portal_auth_schema':
+        return 'Client portal enrollment needs a database update on the practice server. Please contact your practice administrator.';
       case 'portal_auth_unavailable':
       case 'portal_account_creation_failed':
         return 'The portal account service is temporarily unavailable. Please try again shortly. If the problem continues, contact your practice.';
