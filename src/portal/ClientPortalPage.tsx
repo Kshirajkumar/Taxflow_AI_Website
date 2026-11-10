@@ -114,6 +114,8 @@ function getPortalAuthErrorMessage(requestError: unknown, mode: 'register' | 'si
         return 'This email is already used for a TaxFlow practice account. Ask your CA for a different client email address.';
       case 'portal_auth_rate_limited':
         return 'Too many attempts were made. Please wait a few minutes before trying again.';
+      case 'portal_auth_configuration':
+        return 'Client portal enrollment is not configured correctly on the practice server. Please contact your practice administrator.';
       case 'portal_auth_unavailable':
       case 'portal_account_creation_failed':
         return 'The portal account service is temporarily unavailable. Please try again shortly. If the problem continues, contact your practice.';
