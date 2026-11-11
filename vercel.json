@@ -6,6 +6,10 @@
       "destination": "/portal/index.html"
     },
     {
+      "source": "/reset-password",
+      "destination": "/reset-password/index.html"
+    },
+    {
       "source": "/product",
       "destination": "/product/index.html"
     },

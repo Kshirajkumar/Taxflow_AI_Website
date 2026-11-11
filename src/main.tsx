@@ -1833,6 +1833,184 @@ function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
   );
 }
 
+function ResetPasswordPage() {
+  const [status, setStatus] = useState<'checking' | 'ready' | 'saving' | 'success' | 'error'>('checking');
+  const [message, setMessage] = useState('Verifying your secure recovery link…');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let unsubscribe = () => {};
+
+    const prepareRecovery = async () => {
+      if (!supabase) {
+        if (active) {
+          setStatus('error');
+          setMessage('Password recovery is temporarily unavailable. Please try again later.');
+        }
+        return;
+      }
+
+      const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+        if (!active) return;
+        if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+          setStatus('ready');
+          setMessage('Choose a new password for your TaxFlow AI account.');
+        }
+      });
+      unsubscribe = () => listener.subscription.unsubscribe();
+
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          if (active) {
+            setStatus('error');
+            setMessage('This recovery link is invalid or has expired. Request a new one from the sign-in screen.');
+          }
+          return;
+        }
+      }
+
+      const { data, error } = await supabase.auth.getSession();
+      if (!active) return;
+      if (error || !data.session) {
+        setStatus('error');
+        setMessage('This recovery link is invalid or has expired. Request a new one from the sign-in screen.');
+        return;
+      }
+
+      window.history.replaceState({}, document.title, '/reset-password');
+      setStatus('ready');
+      setMessage('Choose a new password for your TaxFlow AI account.');
+    };
+
+    void prepareRecovery();
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!supabase || status !== 'ready') return;
+    if (password.length < 8) {
+      setMessage('Use at least 8 characters for your new password.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMessage('The passwords do not match. Check both fields and try again.');
+      return;
+    }
+
+    setStatus('saving');
+    setMessage('Updating your password securely…');
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      setStatus('ready');
+      setMessage(error.message || 'We could not update your password. Please request a new link and try again.');
+      return;
+    }
+
+    await supabase.auth.signOut();
+    setPassword('');
+    setConfirmPassword('');
+    setStatus('success');
+    setMessage('Your password has been updated. You can now return to TaxFlow AI and sign in.');
+  };
+
+  const isBusy = status === 'checking' || status === 'saving';
+
+  return (
+    <main className="reset-page">
+      <div className="reset-orbit reset-orbit-one" aria-hidden="true" />
+      <div className="reset-orbit reset-orbit-two" aria-hidden="true" />
+      <header className="reset-header">
+        <a href="/" className="wordmark" aria-label="TaxFlow AI home">
+          <BrandGlyph />
+          <span>TaxFlow</span><em className="brand-ai">AI</em>
+        </a>
+        <a className="reset-back-link" href="/">Back to website</a>
+      </header>
+
+      <section className="reset-layout" aria-labelledby="reset-title">
+        <div className="reset-intro">
+          <span className="reset-kicker"><Icon name="shield" size={15} /> Secure account recovery</span>
+          <h1 id="reset-title">A fresh key for your practice workspace.</h1>
+          <p>Set a new password and get back to the focused, private workspace built for your tax practice.</p>
+          <div className="reset-trust-list" aria-label="Security details">
+            <span><Icon name="lock" size={15} /> Encrypted recovery session</span>
+            <span><Icon name="check" size={15} /> Link works only once</span>
+          </div>
+        </div>
+
+        <div className="reset-card">
+          <div className={`reset-status-icon reset-status-${status}`} aria-hidden="true">
+            <Icon name={status === 'success' ? 'check' : status === 'error' ? 'x' : 'lock'} size={21} />
+          </div>
+          <div className="reset-card-heading">
+            <span className="eyebrow">TaxFlow account</span>
+            <h2>{status === 'success' ? 'Password updated' : status === 'error' ? 'Recovery link unavailable' : 'Set your new password'}</h2>
+            <p>{message}</p>
+          </div>
+
+          {status === 'ready' || status === 'saving' ? (
+            <form className="reset-form" onSubmit={handleSubmit} noValidate>
+              <label htmlFor="new-password">New password</label>
+              <div className="reset-input-wrap">
+                <input
+                  id="new-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  disabled={isBusy}
+                />
+                <button type="button" className="reset-visibility" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide new password' : 'Show new password'}>
+                  <Icon name="eye" size={17} />
+                </button>
+              </div>
+              <span className="reset-help">Use at least 8 characters. A longer phrase is stronger.</span>
+
+              <label htmlFor="confirm-password">Confirm password</label>
+              <div className="reset-input-wrap">
+                <input
+                  id="confirm-password"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  disabled={isBusy}
+                />
+                <button type="button" className="reset-visibility" onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}>
+                  <Icon name="eye" size={17} />
+                </button>
+              </div>
+
+              <button className="button button-dark reset-submit" type="submit" disabled={isBusy}>
+                {status === 'saving' ? 'Updating password…' : 'Update password'}
+                {status !== 'saving' && <Icon name="arrow" size={17} />}
+              </button>
+            </form>
+          ) : null}
+
+          {status === 'success' && <a className="button button-dark reset-submit reset-success-link" href="/">Return to TaxFlow AI <Icon name="arrow" size={17} /></a>}
+          {status === 'error' && <a className="reset-retry-link" href="/">Return to TaxFlow AI</a>}
+          <p className="reset-security-note"><Icon name="shield" size={14} /> TaxFlow AI will never ask you to share your password by email.</p>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 function App() {
   useEffect(() => {
     const path = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -1855,6 +2033,7 @@ function App() {
 
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
   if (path === '/portal') return <ClientPortalPage />;
+  if (path === '/reset-password') return <ResetPasswordPage />;
   if (path === '/sitemap') return <SiteMapPage />;
   if (path === '/waitlist') return <WaitlistPage />;
   if (path === '/get-app') return <GetAppPage />;

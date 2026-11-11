@@ -14,6 +14,21 @@ const sitemapUrls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => m
 assert.ok(robots.includes(`Sitemap: ${manifest.siteUrl}/sitemap.xml`));
 assert.ok(!sitemap.includes('/portal'));
 assert.equal(sitemapUrls.length, manifest.pages.filter((page) => page.indexable).length);
+for (const section of [
+  '## Audience and access',
+  '## Product status',
+  '## Accuracy, safety, and product limits',
+  '## Guidance for AI assistants and search agents',
+  '## Product and workflow',
+  '## Access and policies',
+  '## Website navigation'
+]) {
+  assert.ok(llms.includes(section), `AI-readable guide section: ${section}`);
+}
+assert.ok(llms.includes('TaxFlow AI does not currently file tax returns'));
+assert.ok(llms.includes('not currently available to download'));
+assert.ok(llms.includes(`[TaxFlow AI invited-client portal](${manifest.siteUrl}/portal)`));
+assert.ok(llms.includes('not publicly specified instead of guessing'));
 
 for (const page of manifest.pages) {
   const routeHtml = page.path === '/'

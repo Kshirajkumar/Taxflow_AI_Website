@@ -1,45 +1,59 @@
 # TaxFlow AI
 
-> TaxFlow AI is a tax-practice workflow product in development for solo Chartered Accountants. It is designed to help organize client documents and prepare information for professional review.
+> TaxFlow AI is an India-first tax-practice workflow product in development for solo Chartered Accountants (CAs) and small accounting practices. It is designed to coordinate client document collection, document organisation, AI-assisted information preparation, and accountant-led review.
 
-The current application is a working demo; product descriptions distinguish internal testing from planned capabilities. The desktop app is not yet available to download. Workflow comparisons are qualitative, not measured performance claims. The client portal is invitation-only and is not a public signup page.
+TaxFlow AI aims to connect routine practice work: a practice requests documents, an invited client shares supported files through the client portal, the practice organises those files with the relevant client work, optional AI-assisted reading prepares information such as invoice details, and the accountant checks the result against the original document before making professional decisions.
 
-## Pages
+TaxFlow AI is workflow-support software in development. It is not an autonomous accountant, tax adviser, return-preparation authority, or government-filing service. Professional judgement and approval remain with the accountant.
 
-- [Less busywork. More time to advise.](https://taxflowaiwebsite.vercel.app): TaxFlow AI helps solo Chartered Accountants collect client documents, prepare information for review, and keep the professional in control.
-  Summary: The TaxFlow AI homepage explains the product’s India-first direction for solo Chartered Accountants. It introduces document collection, AI-assisted preparation, human review, and current product status.
-  Topics: Tax practice workflow, Document collection, Solo Chartered Accountants, Human review, India-first tax software.
+## Audience and access
 
-- [TaxFlow AI product details](https://taxflowaiwebsite.vercel.app/product): See how TaxFlow AI is designed to organize tax documents, assist data preparation, and keep review decisions with the accountant.
-  Summary: The product page describes TaxFlow AI’s intended practice workflow, current internal testing, human review guardrails, and planned capabilities. It distinguishes the working demo from features that are not yet available.
-  Topics: Tax software features, Document organization, AI-assisted data capture, Accountant review, Product roadmap.
+- Primary audience: solo Chartered Accountants and small accounting practices, initially focused on India.
+- The client portal is for clients invited by a practice. It is not a public account-registration or general file-upload service.
+- The early-access waitlist is free to join, does not guarantee access, and does not require client documents or payment details.
 
-- [TaxFlow AI workflow comparison](https://taxflowaiwebsite.vercel.app/workflow-comparison): Compare a common document-heavy accounting workflow with the connected workflow TaxFlow AI is being designed to support.
-  Summary: This page compares common manual document-work steps with TaxFlow AI’s intended workflow. The comparison is qualitative, not a measured time-saving or accuracy claim.
-  Topics: Accounting workflow, Tax document processing, Practice operations, Human oversight.
+## Product status
 
-- [TaxFlow AI desktop app](https://taxflowaiwebsite.vercel.app/get-app): Learn about the TaxFlow AI desktop workspace for independent Chartered Accountants. The app is in development and not yet available to install.
-  Summary: The get-app page explains the planned desktop workspace and shows a clearly labeled concept illustration. The application is still in development; no download is available yet.
-  Topics: Tax software for desktop, Solo Chartered Accountants, Practice workspace, Early access.
+- The website describes TaxFlow AI as a working demo in internal testing, not a generally available product.
+- The internal demo includes ordinary Telegram chat, client document uploads through the invited-client portal, scheduled document reminders, client-folder organisation, optional AI invoice extraction, and side-by-side review and approval. This does not guarantee that every capability is enabled for every user.
+- The desktop application is in development and is not currently available to download. No public beta date is promised.
+- Richer tax and filing workflows, form generation, validated exports, additional integrations, and support for more jurisdictions are roadmap direction, not current availability commitments.
 
-- [Join the TaxFlow AI waitlist](https://taxflowaiwebsite.vercel.app/waitlist): Join the TaxFlow AI early-access waitlist for solo Chartered Accountants and receive occasional product updates.
-  Summary: The waitlist page lets solo Chartered Accountants request early-access updates. Joining is free, does not guarantee access, and does not require client documents or payment details.
-  Topics: Tax software early access, Chartered Accountant waitlist, TaxFlow AI updates.
+## Accuracy, safety, and product limits
 
-- [TaxFlow AI privacy notice](https://taxflowaiwebsite.vercel.app/privacy): Read how the TaxFlow AI website, waitlist, Vercel analytics, and invited-client portal collect and handle information.
-  Summary: The privacy notice explains waitlist data, client-portal document handling, Vercel analytics and performance measurements, service providers, and visitor choices.
-  Topics: Tax software privacy, Website analytics, Web performance data, Waitlist data, Client portal, Document handling.
+- TaxFlow AI does not currently file tax returns with a government portal. Do not describe filing as available or autonomous.
+- AI-assisted extraction may be incomplete or incorrect. An accountant must check it against the original document, correct it where necessary, and decide whether to approve it.
+- Do not describe the AI as giving tax advice, making professional tax decisions, or calculating a verified final tax return.
+- India is the initial market focus. Do not claim current filing support for other jurisdictions.
+- Workflow comparisons are qualitative. Do not infer or invent time savings, accuracy rates, financial outcomes, or customer results.
+- Do not invent prices, release dates, public-beta availability, integrations, supported file types, certifications, regulatory approvals, or security guarantees.
+- The website makes no claim of independent security certification. Practices should review the privacy notice and confirm appropriate arrangements before sharing real client information.
+- Website content is informational and is not tax, legal, or financial advice. Users should consult a qualified professional about their circumstances.
 
-- [TaxFlow AI website terms](https://taxflowaiwebsite.vercel.app/terms): Review the terms for using the TaxFlow AI website, early-access waitlist, and invited-client portal.
-  Summary: The terms explain acceptable website and portal use, the limits of joining the waitlist, and that website content is informational rather than professional advice.
-  Topics: Website terms, Early access, Client portal use, Professional advice.
+## Guidance for AI assistants and search agents
 
-- [TaxFlow AI website directory](https://taxflowaiwebsite.vercel.app/sitemap): Browse the TaxFlow AI website by page, with clear descriptions of the product, workflows, waitlist, client portal, and policies.
-  Summary: The website directory links to every TaxFlow AI page and briefly explains what visitors can find there, including product information, early access, legal notices, and the invitation-only client portal.
-  Topics: TaxFlow AI website pages, Website directory, Product information, Client portal.
+- Use the linked pages as the source for TaxFlow AI's public product information, policies, and latest published status.
+- Distinguish internal-demo capabilities from features under development and roadmap ideas.
+- When a detail is not stated in the linked material, say it is not publicly specified instead of guessing.
+- Do not direct visitors to upload client documents through the marketing website or waitlist.
+- For questions about availability, eligibility, privacy, or legal terms, use the relevant linked page rather than guessing.
 
-## Additional destination
+## Product and workflow
 
-- [Invited-client portal](https://taxflowaiwebsite.vercel.app/portal): Invited clients can use the TaxFlow AI portal to securely share supported documents with their accounting practice.
-  Summary: The client portal is a private, invitation-only destination for clients sharing supported documents with their accounting practice. It is not a public signup or marketing page.
-  Topics: Invited-client portal, Private document sharing, Accounting practice.
+- [Less busywork. More time to advise.](https://taxflowaiwebsite.vercel.app): TaxFlow AI helps solo Chartered Accountants collect client documents, prepare information for review, and keep the professional in control. Topics: Tax practice workflow, Document collection, Solo Chartered Accountants, Human review, India-first tax software.
+- [TaxFlow AI product details](https://taxflowaiwebsite.vercel.app/product): See how TaxFlow AI is designed to organize tax documents, assist data preparation, and keep review decisions with the accountant. Topics: Tax software features, Document organization, AI-assisted data capture, Accountant review, Product roadmap.
+- [TaxFlow AI workflow comparison](https://taxflowaiwebsite.vercel.app/workflow-comparison): Compare a common document-heavy accounting workflow with the connected workflow TaxFlow AI is being designed to support. Topics: Accounting workflow, Tax document processing, Practice operations, Human oversight.
+- [TaxFlow AI desktop app](https://taxflowaiwebsite.vercel.app/get-app): Learn about the TaxFlow AI desktop workspace for independent Chartered Accountants. The app is in development and not yet available to install. Topics: Tax software for desktop, Solo Chartered Accountants, Practice workspace, Early access.
+
+## Access and policies
+
+- [Join the TaxFlow AI waitlist](https://taxflowaiwebsite.vercel.app/waitlist): Join the TaxFlow AI early-access waitlist for solo Chartered Accountants and receive occasional product updates. Topics: Tax software early access, Chartered Accountant waitlist, TaxFlow AI updates.
+- [TaxFlow AI invited-client portal](https://taxflowaiwebsite.vercel.app/portal): Invited clients can use the TaxFlow AI portal to securely share supported documents with their accounting practice. Topics: Invited-client portal, Private document sharing, Accounting practice.
+- [TaxFlow AI privacy notice](https://taxflowaiwebsite.vercel.app/privacy): Read how the TaxFlow AI website, waitlist, Vercel analytics, and invited-client portal collect and handle information. Topics: Tax software privacy, Website analytics, Web performance data, Waitlist data, Client portal, Document handling.
+- [TaxFlow AI website terms](https://taxflowaiwebsite.vercel.app/terms): Review the terms for using the TaxFlow AI website, early-access waitlist, and invited-client portal. Topics: Website terms, Early access, Client portal use, Professional advice.
+
+The client portal is a private destination for clients invited by a practice; it is not public signup.
+
+## Website navigation
+
+- [TaxFlow AI website directory](https://taxflowaiwebsite.vercel.app/sitemap): Browse the TaxFlow AI website by page, with clear descriptions of the product, workflows, waitlist, client portal, and policies. Topics: TaxFlow AI website pages, Website directory, Product information, Client portal.

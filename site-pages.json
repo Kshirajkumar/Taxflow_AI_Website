@@ -90,6 +90,17 @@
       "indexable": false
     },
     {
+      "path": "/reset-password",
+      "slug": "reset-password",
+      "title": "Reset your TaxFlow AI password",
+      "description": "Securely choose a new password for your TaxFlow AI account.",
+      "summary": "A secure, non-indexed password recovery page for TaxFlow AI accounts.",
+      "topics": ["Password reset", "Account security", "TaxFlow AI account"],
+      "section": "Account security",
+      "imageAlt": "TaxFlow AI secure password reset page.",
+      "indexable": false
+    },
+    {
       "path": "/sitemap",
       "slug": "sitemap",
       "title": "TaxFlow AI website directory",
