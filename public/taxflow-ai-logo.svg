@@ -3,6 +3,6 @@
   <rect width="42" height="42" rx="11" fill="#2347d9"/>
   <path d="M10 13.5h21M10 20h14M10 26.5h8" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="2.6" opacity=".74"/>
   <path d="m21 27 4.1 4.1 8-9.2" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
-  <text x="54" y="30" fill="#0d1a2d" font-family="Public Sans, Arial, sans-serif" font-size="27" font-weight="700" letter-spacing="-1.4">TaxFlow</text>
-  <text x="163" y="30" fill="#2347d9" font-family="Public Sans, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing=".3">AI</text>
+  <text x="54" y="30" fill="#0d1a2d" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="-1.4">TaxFlow</text>
+  <text x="163" y="30" fill="#2347d9" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" letter-spacing=".3">AI</text>
 </svg>
