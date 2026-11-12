@@ -431,8 +431,8 @@ export function ClientPortalPage() {
           && requestError.status === 400
           && /invitation is invalid or expired/i.test(requestError.message);
         const friendlyError = getPortalAuthErrorMessage(requestError, mode);
-        setError(invalidInvitation
-          ? 'We couldn’t use this invitation. It may have expired, already been used, or the email may not match your CA’s record. Check the exact email or ask your CA for a fresh link. If you already registered, choose “Already enrolled? Sign in.”'
+          setError(invalidInvitation
+            ? 'This invitation link is no longer the active link for this client. Ask your CA to send the latest invitation link, then open that new link before creating the account. If you already registered, choose “Already enrolled? Sign in.”'
           : requestError instanceof TypeError
             ? 'We couldn’t reach the portal service. Check your internet connection and try again. If the problem continues, contact your tax practice.'
             : friendlyError);
