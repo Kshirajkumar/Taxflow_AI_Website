@@ -174,8 +174,11 @@ export function ClientPortalPage() {
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [email, setEmail] = useState(registrationHandoffEmail || '');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'register' | 'signin'>(registrationHandoffEmail ? 'signin' : 'register');
+  // A normal /portal visit is sign-in only. Registration is available only
+  // while the one-time invitation token is present in the URL fragment.
+  const [mode, setMode] = useState<'register' | 'signin'>(registrationHandoffEmail || !inviteToken ? 'signin' : 'register');
   const [registrationSuccessEmail, setRegistrationSuccessEmail] = useState<string | null>(null);
+  const [registrationRedirectSeconds, setRegistrationRedirectSeconds] = useState(8);
   const [inviteAlreadyClaimed, setInviteAlreadyClaimed] = useState(false);
   const [inviteStatusNotice, setInviteStatusNotice] = useState('');
   const [authenticating, setAuthenticating] = useState(false);
@@ -211,8 +214,15 @@ export function ClientPortalPage() {
 
   useEffect(() => {
     if (!registrationSuccessEmail) return undefined;
-    const timer = window.setTimeout(continueRegistrationToSignIn, 2600);
-    return () => window.clearTimeout(timer);
+    setRegistrationRedirectSeconds(8);
+    const countdown = window.setInterval(() => {
+      setRegistrationRedirectSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    const redirect = window.setTimeout(continueRegistrationToSignIn, 8000);
+    return () => {
+      window.clearInterval(countdown);
+      window.clearTimeout(redirect);
+    };
   }, [continueRegistrationToSignIn, registrationSuccessEmail]);
 
   useEffect(() => {
@@ -550,7 +560,7 @@ export function ClientPortalPage() {
             <button type="button" className="portal-upload-button" onClick={continueRegistrationToSignIn}>
               Continue to sign in <PortalIcon name="arrow" size={16} />
             </button>
-            <span className="portal-success-redirect">Taking you to secure sign-in…</span>
+            <span className="portal-success-redirect">Redirecting to secure sign-in in {registrationRedirectSeconds}s</span>
           </div>
         ) : !authReady || loadingPortal || checkingInviteStatus ? (
           <div className="portal-state-card portal-loading-card" role="status">
