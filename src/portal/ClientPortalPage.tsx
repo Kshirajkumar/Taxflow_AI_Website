@@ -190,6 +190,26 @@ export function ClientPortalPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const authFlowInProgress = useRef(false);
 
+  const handlePortalAccessRevoked = useCallback(async (message?: string) => {
+    if (supabase) {
+      try {
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) console.error('[Client Portal] Revocation sign-out failed:', signOutError.message);
+      } catch (signOutError) {
+        console.error('[Client Portal] Revocation sign-out failed:', signOutError);
+      }
+    }
+    setSession(null);
+    setPortal(null);
+    setPassword('');
+    setInviteToken(null);
+    setRegistrationHandoffEmail(null);
+    setInviteAlreadyClaimed(false);
+    setMode('signin');
+    removeInviteFromUrl();
+    setError(message || 'Your portal access was revoked by your practice. You have been signed out. Contact your CA if you need access again.');
+  }, []);
+
   const continueRegistrationToSignIn = useCallback(() => {
     if (!registrationSuccessEmail) return;
     try {
@@ -327,14 +347,43 @@ export function ClientPortalPage() {
       .catch((requestError: unknown) => {
         if (!disposed) {
           setPortal(null);
-          setError(requestError instanceof Error ? requestError.message : 'Could not verify your portal access.');
+          if (requestError instanceof PortalRequestError && requestError.code === 'portal_access_revoked') {
+            void handlePortalAccessRevoked(requestError.message);
+          } else {
+            setError(requestError instanceof Error ? requestError.message : 'Could not verify your portal access.');
+          }
         }
       })
       .finally(() => {
         if (!disposed) setLoadingPortal(false);
       });
     return () => { disposed = true; };
-  }, [session?.access_token]);
+  }, [handlePortalAccessRevoked, session?.access_token]);
+
+  useEffect(() => {
+    if (!session?.access_token || !portal || authFlowInProgress.current) return undefined;
+    let disposed = false;
+    const verifyLiveAccess = async () => {
+      try {
+        await readResponse<{ client: PortalData['client']; email: string }>(await fetch(
+          portalApiUrl('/api/v1/client-portal/me'),
+          { headers: { Authorization: `Bearer ${session.access_token}` } },
+        ));
+      } catch (requestError) {
+        if (disposed) return;
+        if (requestError instanceof PortalRequestError && requestError.code === 'portal_access_revoked') {
+          await handlePortalAccessRevoked(requestError.message);
+        }
+        // Temporary network/5xx failures do not sign the client out. The next
+        // interval retries the authoritative backend check.
+      }
+    };
+    const timer = window.setInterval(() => void verifyLiveAccess(), 5000);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+    };
+  }, [handlePortalAccessRevoked, portal, session?.access_token]);
 
   const chooseFile = useCallback((file?: File) => {
     setError('');
@@ -482,11 +531,15 @@ export function ClientPortalPage() {
         setError('Your file was received, but the upload history could not refresh. Reload this page to check its status.');
       }
     } catch (requestError) {
-      setError(requestError instanceof Error
-        ? requestError.message
-        : uploadSaved
-          ? 'Your file was received, but the portal could not refresh.'
-          : 'The file could not be uploaded. Your original file has not been changed.');
+      if (requestError instanceof PortalRequestError && requestError.code === 'portal_access_revoked') {
+        await handlePortalAccessRevoked(requestError.message);
+      } else {
+        setError(requestError instanceof Error
+          ? requestError.message
+          : uploadSaved
+            ? 'Your file was received, but the portal could not refresh.'
+            : 'The file could not be uploaded. Your original file has not been changed.');
+      }
     } finally {
       setUploading(false);
     }
