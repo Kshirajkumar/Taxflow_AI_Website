@@ -190,7 +190,7 @@ export function ClientPortalPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const authFlowInProgress = useRef(false);
 
-  const handlePortalAccessRevoked = useCallback(async (message?: string) => {
+  const handlePortalAccessRevoked = useCallback(async (message?: string, code?: string) => {
     if (supabase) {
       try {
         const { error: signOutError } = await supabase.auth.signOut();
@@ -207,7 +207,9 @@ export function ClientPortalPage() {
     setInviteAlreadyClaimed(false);
     setMode('signin');
     removeInviteFromUrl();
-    setError(message || 'Your portal access was revoked by your practice. You have been signed out. Contact your CA if you need access again.');
+    setError(message || (code === 'portal_access_paused'
+      ? 'Your portal access is temporarily paused by your practice. You have been signed out. Contact your CA when access should be restored.'
+      : 'Your portal access was revoked by your practice. You have been signed out. Contact your CA if you need access again.'));
   }, []);
 
   const continueRegistrationToSignIn = useCallback(() => {
@@ -347,8 +349,8 @@ export function ClientPortalPage() {
       .catch((requestError: unknown) => {
         if (!disposed) {
           setPortal(null);
-          if (requestError instanceof PortalRequestError && requestError.code === 'portal_access_revoked') {
-            void handlePortalAccessRevoked(requestError.message);
+          if (requestError instanceof PortalRequestError && ['portal_access_revoked', 'portal_access_paused'].includes(requestError.code || '')) {
+            void handlePortalAccessRevoked(requestError.message, requestError.code);
           } else {
             setError(requestError instanceof Error ? requestError.message : 'Could not verify your portal access.');
           }
@@ -371,8 +373,8 @@ export function ClientPortalPage() {
         ));
       } catch (requestError) {
         if (disposed) return;
-        if (requestError instanceof PortalRequestError && requestError.code === 'portal_access_revoked') {
-          await handlePortalAccessRevoked(requestError.message);
+        if (requestError instanceof PortalRequestError && ['portal_access_revoked', 'portal_access_paused'].includes(requestError.code || '')) {
+          await handlePortalAccessRevoked(requestError.message, requestError.code);
         }
         // Temporary network/5xx failures do not sign the client out. The next
         // interval retries the authoritative backend check.
