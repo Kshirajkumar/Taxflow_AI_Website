@@ -124,7 +124,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), socialPageHtml()],
     define: {
       __SUPABASE_URL__: JSON.stringify(env.SUPABASE_URL ?? ''),
-      __SUPABASE_ANON_KEY__: JSON.stringify(env.SUPABASE_ANON_KEY ?? ''),
+      __SUPABASE_PUBLISHABLE_KEY__: JSON.stringify(env.SUPABASE_PUBLISHABLE_KEY ?? ''),
       __API_URL__: JSON.stringify(env.API_URL ?? '')
     },
     server: {
